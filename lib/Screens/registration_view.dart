@@ -1,5 +1,9 @@
+import 'dart:html';
 import 'package:flutter/material.dart';
 import 'package:email_validator/email_validator.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:loading/indicator/ball_pulse_indicator.dart';
+import 'package:loading/loading.dart';
 
 
 class registration_view extends StatefulWidget {
@@ -11,11 +15,13 @@ class registration_view extends StatefulWidget {
 
 class _registration_viewState extends State<registration_view> {
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  final dbRef = FirebaseDatabase.instance.reference().child("Users");
   final TextEditingController fistNameController = new TextEditingController();
   final TextEditingController lastNameController = new TextEditingController();
   final TextEditingController emailController = new TextEditingController();
 
   DateTime selectedDate = DateTime.now();
+  bool send = false;
 
   TextStyle btnStyle = new TextStyle(
       color: Colors.white, fontWeight: FontWeight.w500, fontSize: 20.0);
@@ -34,7 +40,7 @@ class _registration_viewState extends State<registration_view> {
     );
     // selectedDate = picked;
 
-    if (picked != null && picked != selectedDate) {
+    if (picked != null && picked != selectedDate &&) {
       setState(() {
         selectedDate = picked;
         print(selectedDate);
@@ -44,7 +50,54 @@ class _registration_viewState extends State<registration_view> {
         // select = selectedDate.toString();
       });
     }
-  }
+  } 
+  // Widget showDialog(
+  //   context: context,
+  //   builder: (BuildContext context){
+  //       return AlertDialog(
+  //         title: Text("Alert Dialog"),
+  //         content: Text("Dialog Content"),
+  //       );
+  //   }
+  // )
+  // Widget showDialog(){
+
+  //   builder: (BuildContext context){
+  //       return AlertDialog(
+  //         title: Text("Registration Failed"),
+  //         content: Text("Please check your Internet connection"),
+  //         actions: [
+  //           FlatButton(onPressed: (){
+  //             Navigator.pop(context);
+  //           }, child: Text("close"))
+  //         ],
+
+  //       );
+  //   };
+  // }
+
+  void msg(BuildContext context){
+      var alertDialog = AlertDialog(
+        title: Text("Alert Dialog"),
+        content: Text("Are you sure?"),
+
+      );
+      showDialog(context: context,
+      builder: (BuildContext context){
+        return alertDialog;
+      }
+      
+    );
+
+    }
+
+  // Widget loader(){
+  //   return loader(
+  //     Loading(
+  //       indicator: BallPulseIndicator(),size: 100.0,
+  //     )
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -195,9 +248,29 @@ class _registration_viewState extends State<registration_view> {
                     ),
                     onPressed: () {
                       if (formKey.currentState.validate()) {
-                        fistNameController.clear();
-                        lastNameController.clear();
-                        emailController.clear();
+                        send = true;
+                        dbRef.push().set({
+                          "First Name":fistNameController.text,
+                          "Last Name": lastNameController.text,
+                          "DOB":selectedDate.toString(),
+                          "Email":emailController.text,
+                        })  .then((_){
+                           print("Data Added");
+                            fistNameController.clear();
+                            lastNameController.clear();
+                            emailController.clear();
+                        } ).catchError((onError){
+                          print(onError);
+                          AlertDialog(
+                            title: Text("Registration Failed"),
+                            content: Text("Please check your Internet connection"),
+                            actions: [
+                              FlatButton(
+                                color: Colors.blue,
+                                onPressed: (){}, child: Text("Close",style: TextStyle(color: Colors.white),))
+                            ],
+                          );
+                        });
                       }
                     }),
               ),
@@ -209,7 +282,23 @@ class _registration_viewState extends State<registration_view> {
                       "Skip",
                       style: TextStyle(fontSize: 18.0, color: Colors.black54),
                     ),
-                    onPressed: () {}),
+                    onPressed: () {
+                      //showDialog();
+                      msg(context);
+                      //  AlertDialog(
+                      //       title: Text("Registration Failed"),
+                      //       content: Text("Please check your Internet connection"),
+                      //       actions: [
+                      //         FlatButton(
+                      //           color: Colors.blue,
+                      //           onPressed: (){}, child: Text("Close",style: TextStyle(color: Colors.white),))
+                      //       ],
+                      //     );
+                    }),
+              ),
+                Padding(
+                padding: EdgeInsets.only(top: 10.0),
+                child: Text(send ? "Data Added Successfully" : " "),
               )
             ],
           ),

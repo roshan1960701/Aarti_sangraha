@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "1059733943339",
+    "firebase_url": "https://aarti-sangraha-c85a2.firebaseio.com",
+    "project_id": "aarti-sangraha-c85a2",
+    "storage_bucket": "aarti-sangraha-c85a2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1059733943339:android:1fa625c29115aa1262666e",
+        "android_client_info": {
+          "package_name": "com.example.aarti_sangraha"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1059733943339-n38emtt2mc9ao9thge3d3u2vba64de25.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0-urtFg_bmH3leBk9om6zioPcJOKxuWc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1059733943339-n38emtt2mc9ao9thge3d3u2vba64de25.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

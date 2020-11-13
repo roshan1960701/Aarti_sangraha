@@ -37,39 +37,41 @@ class _onboarding_viewState extends State<onboarding_view> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return WillPopScope(
       child: Scaffold(
-        body: Container(
-          decoration: BoxDecoration(
-              gradient: LinearGradient(
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                  colors: [Colors.white, Colors.orange[600]])),
-          // height: MediaQuery.of(context).size.height,
-          child: PageView(
-            controller: controller,
-            onPageChanged: (index) {
-              setState(() {
-                slideIndex = index;
-              });
-            },
-            children: <Widget>[
-              sliderTile(
-                imagePath: mySLides[0].getImageAssetPath(),
-                title: mySLides[0].getTitle(),
-                desc: mySLides[0].getDesc(),
-              ),
-              sliderTile(
-                imagePath: mySLides[1].getImageAssetPath(),
-                title: mySLides[1].getTitle(),
-                desc: mySLides[1].getDesc(),
-              ),
-              sliderTile(
-                imagePath: mySLides[2].getImageAssetPath(),
-                title: mySLides[2].getTitle(),
-                desc: mySLides[2].getDesc(),
-              )
-            ],
+        body: SafeArea(
+                  child: Container(
+            decoration: BoxDecoration(
+                gradient: LinearGradient(
+                    begin: Alignment.centerLeft,
+                     end: Alignment.centerRight,
+                    colors: [Colors.white, Colors.orange[600]])),
+            // height: MediaQuery.of(context).size.height,
+            child: PageView(
+              controller: controller,
+              onPageChanged: (index) {
+                setState(() {
+                  slideIndex = index;
+                });
+              },
+              children: <Widget>[
+                sliderTile(
+                  imagePath: mySLides[0].getImageAssetPath(),
+                  title: mySLides[0].getTitle(),
+                  desc: mySLides[0].getDesc(),
+                ),
+                sliderTile(
+                  imagePath: mySLides[1].getImageAssetPath(),
+                  title: mySLides[1].getTitle(),
+                  desc: mySLides[1].getDesc(),
+                ),
+                sliderTile(
+                  imagePath: mySLides[2].getImageAssetPath(),
+                  title: mySLides[2].getTitle(),
+                  desc: mySLides[2].getDesc(),
+                )
+              ],
+            ),
           ),
         ),
         bottomSheet: slideIndex != 2
