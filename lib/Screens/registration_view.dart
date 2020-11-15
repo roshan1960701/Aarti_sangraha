@@ -1,10 +1,9 @@
-import 'dart:html';
+import 'package:aarti_sangraha/Screens/home_view.dart';
 import 'package:flutter/material.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:loading/indicator/ball_pulse_indicator.dart';
-import 'package:loading/loading.dart';
-
+import 'package:progress_dialog/progress_dialog.dart';
+import 'package:aarti_sangraha/Model/databaseHelper.dart';
 
 class registration_view extends StatefulWidget {
   registration_view({Key key}) : super(key: key);
@@ -15,13 +14,24 @@ class registration_view extends StatefulWidget {
 
 class _registration_viewState extends State<registration_view> {
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  final dbhelper = databaseHelper.instance;
   final dbRef = FirebaseDatabase.instance.reference().child("Users");
   final TextEditingController fistNameController = new TextEditingController();
   final TextEditingController lastNameController = new TextEditingController();
   final TextEditingController emailController = new TextEditingController();
 
+  String name;
+  String lastName;
+  String email;
+  String date;
+
+  ProgressDialog pr;
   DateTime selectedDate = DateTime.now();
-  bool send = false;
+  String insertedDate = DateTime.now().toString();
+  DateTime newDate = DateTime.now();
+  // DateTime fiftyDaysAgo = newDate.subtract(new Duration(days: 50));
+
+  //bool send = false;
 
   TextStyle btnStyle = new TextStyle(
       color: Colors.white, fontWeight: FontWeight.w500, fontSize: 20.0);
@@ -30,6 +40,36 @@ class _registration_viewState extends State<registration_view> {
     colors: <Color>[Colors.blue, Colors.purple],
   ).createShader(Rect.fromLTWH(0.0, 0.0, 200.0, 70.0));
 
+  void insertData() async {
+    Map<String, dynamic> row = {
+      databaseHelper.columnFirstName: fistNameController.text,
+      databaseHelper.columnLastName: lastNameController.text,
+      databaseHelper.columnEmailId: emailController.text,
+      databaseHelper.columnDOB: selectedDate.toString(),
+      databaseHelper.columnInsertedDate: insertedDate,
+    };
+    final id = await dbhelper.insert(row);
+    print(id);
+    pr.show();
+    Future.delayed(Duration(seconds: 3)).then((value) {
+      pr.hide().whenComplete(() {
+        Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => home_view()));
+      });
+    });
+    //       Future.delayed(Duration(seconds: 4)).then((value) {
+    //         pr.hide().whenComplete(() {
+    //           Navigator.of(context).pushReplacement(
+    //               MaterialPageRoute(
+    //                   builder: (context) => home_view()));
+  }
+
+  void queryall() async {
+    var allrows = await dbhelper.queryall();
+    allrows.forEach((row) {
+      print(row);
+    });
+  }
 
   Future<Null> _selectDate(BuildContext context) async {
     final DateTime picked = await showDatePicker(
@@ -38,58 +78,36 @@ class _registration_viewState extends State<registration_view> {
       firstDate: new DateTime(1980),
       lastDate: new DateTime.now(),
     );
-    // selectedDate = picked;
 
-    if (picked != null && picked != selectedDate &&) {
+    if (picked != null && picked != selectedDate) {
       setState(() {
         selectedDate = picked;
         print(selectedDate);
-        // var now = new DateTime.now();
-        // var formatter = new DateFormat('yyyy-MM-dd');
-        // String formattedDate = formatter.format(now);
-        // select = selectedDate.toString();
       });
     }
-  } 
-  // Widget showDialog(
-  //   context: context,
-  //   builder: (BuildContext context){
-  //       return AlertDialog(
-  //         title: Text("Alert Dialog"),
-  //         content: Text("Dialog Content"),
-  //       );
-  //   }
-  // )
-  // Widget showDialog(){
+  }
 
-  //   builder: (BuildContext context){
-  //       return AlertDialog(
-  //         title: Text("Registration Failed"),
-  //         content: Text("Please check your Internet connection"),
-  //         actions: [
-  //           FlatButton(onPressed: (){
-  //             Navigator.pop(context);
-  //           }, child: Text("close"))
-  //         ],
-
-  //       );
-  //   };
+  // Widget registrationFailed(BuildContext context) {
+  //   var alertDialog = AlertDialog(
+  //     title: Text("Registration Failed."),
+  //     content: Text("Please check your Internet Connection!!"),
+  //     actions: [
+  //       Align(
+  //         alignment: Alignment.bottomCenter,
+  //         child: FlatButton(
+  //             onPressed: () {
+  //               Navigator.pop(context);
+  //             },
+  //             child: Text("Close")),
+  //       )
+  //     ],
+  //   );
+  //   showDialog(
+  //       context: context,
+  //       builder: (BuildContext context) {
+  //         return alertDialog;
+  //       });
   // }
-
-  void msg(BuildContext context){
-      var alertDialog = AlertDialog(
-        title: Text("Alert Dialog"),
-        content: Text("Are you sure?"),
-
-      );
-      showDialog(context: context,
-      builder: (BuildContext context){
-        return alertDialog;
-      }
-      
-    );
-
-    }
 
   // Widget loader(){
   //   return loader(
@@ -100,7 +118,40 @@ class _registration_viewState extends State<registration_view> {
   // }
 
   @override
+  void initState() {
+    super.initState();
+    newDate.subtract(Duration());
+    queryall();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    pr = ProgressDialog(
+      context,
+      type: ProgressDialogType.Normal,
+      isDismissible: true,
+//      customBody: LinearProgressIndicator(
+//        valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+//        backgroundColor: Colors.white,
+//      ),
+    );
+
+    pr.style(
+//      message: 'Downloading file...',
+      message: 'Please Wait!!!',
+      borderRadius: 10.0,
+      backgroundColor: Colors.white,
+      elevation: 10.0,
+      insetAnimCurve: Curves.easeInOut,
+      progress: 0.0,
+      progressWidgetAlignment: Alignment.center,
+      maxProgress: 100.0,
+      progressTextStyle: TextStyle(
+          color: Colors.black, fontSize: 13.0, fontWeight: FontWeight.w400),
+      messageTextStyle: TextStyle(
+          color: Colors.black, fontSize: 19.0, fontWeight: FontWeight.w600),
+    );
+
     return Scaffold(
       resizeToAvoidBottomPadding: false,
       body: Form(
@@ -246,32 +297,54 @@ class _registration_viewState extends State<registration_view> {
                       "Submit",
                       style: btnStyle,
                     ),
-                    onPressed: () {
-                      if (formKey.currentState.validate()) {
-                        send = true;
-                        dbRef.push().set({
-                          "First Name":fistNameController.text,
-                          "Last Name": lastNameController.text,
-                          "DOB":selectedDate.toString(),
-                          "Email":emailController.text,
-                        })  .then((_){
-                           print("Data Added");
-                            fistNameController.clear();
-                            lastNameController.clear();
-                            emailController.clear();
-                        } ).catchError((onError){
-                          print(onError);
-                          AlertDialog(
-                            title: Text("Registration Failed"),
-                            content: Text("Please check your Internet connection"),
-                            actions: [
-                              FlatButton(
-                                color: Colors.blue,
-                                onPressed: (){}, child: Text("Close",style: TextStyle(color: Colors.white),))
-                            ],
-                          );
-                        });
-                      }
+                    onPressed: () async {
+                      try {
+                        if (formKey.currentState.validate()) {
+                          insertData();
+                        }
+                      } catch (Exception) {}
+
+                      // try {
+                      //   if (formKey.currentState.validate()) {
+                      //     // send = true;
+                      //     dbRef.push().set({
+                      //       "First Name": fistNameController.text,
+                      //       "Last Name": lastNameController.text,
+                      //       "DOB": selectedDate.toString(),
+                      //       "Email": emailController.text,
+                      //     }).then((_) {
+                      //       print("Data Added");
+                      //       pr.show();
+                      //       Future.delayed(Duration(seconds: 4)).then((value) {
+                      //         pr.hide().whenComplete(() {
+                      //           Navigator.of(context).pushReplacement(
+                      //               MaterialPageRoute(
+                      //                   builder: (context) => home_view()));
+                      //         });
+                      //       });
+                      //       fistNameController.clear();
+                      //       lastNameController.clear();
+                      //       emailController.clear();
+                      //     }).catchError((onError) {
+                      //       print(onError);
+                      //       showDialog(
+                      //           context: context,
+                      //           builder: (context) {
+                      //             return AlertDialog(
+                      //               title: Text("Registration Failed"),
+                      //             );
+                      //           });
+                      //     });
+                      //   }
+                      // } catch (Exception) {
+                      //   showDialog(
+                      //       context: context,
+                      //       builder: (BuildContext context) {
+                      //         return AlertDialog(
+                      //           title: Text("Registration Failed"),
+                      //         );
+                      //       });
+                      // }
                     }),
               ),
               Padding(
@@ -283,28 +356,25 @@ class _registration_viewState extends State<registration_view> {
                       style: TextStyle(fontSize: 18.0, color: Colors.black54),
                     ),
                     onPressed: () {
-                      //showDialog();
-                      msg(context);
-                      //  AlertDialog(
-                      //       title: Text("Registration Failed"),
-                      //       content: Text("Please check your Internet connection"),
-                      //       actions: [
-                      //         FlatButton(
-                      //           color: Colors.blue,
-                      //           onPressed: (){}, child: Text("Close",style: TextStyle(color: Colors.white),))
-                      //       ],
-                      //     );
+                      Navigator.pushReplacement(context,
+                          MaterialPageRoute(builder: (context) => home_view()));
+                      // showDialog(
+                      //     context: context,
+                      //     builder: (BuildContext context) {
+                      //       return AlertDialog(
+                      //         title: Text("Warninig"),
+                      //       );
+                      //     });
                     }),
               ),
-                Padding(
-                padding: EdgeInsets.only(top: 10.0),
-                child: Text(send ? "Data Added Successfully" : " "),
-              )
+              // Padding(
+              //   padding: EdgeInsets.only(top: 10.0),
+              //   child: Text('$name' + '$lastName' + '$email'),
+              // )
             ],
           ),
         ),
       ),
     );
   }
-
 }

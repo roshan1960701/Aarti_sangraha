@@ -1,3 +1,4 @@
+import 'package:aarti_sangraha/Screens/home_view.dart';
 import 'package:aarti_sangraha/Screens/onboarding_view.dart';
 import 'package:aarti_sangraha/Screens/registration_view.dart';
 import 'package:aarti_sangraha/Screens/splashScreen_view.dart';
@@ -23,7 +24,7 @@ class _myAppState extends State<myApp> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Aarti Sangraha',
-      home: registration_view(),
+      home: splashScreen_view(),
     );
   }
 }

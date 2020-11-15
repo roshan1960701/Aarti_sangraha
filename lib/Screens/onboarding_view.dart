@@ -37,114 +37,112 @@ class _onboarding_viewState extends State<onboarding_view> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      child: Scaffold(
-        body: SafeArea(
-                  child: Container(
-            decoration: BoxDecoration(
-                gradient: LinearGradient(
-                    begin: Alignment.centerLeft,
-                     end: Alignment.centerRight,
-                    colors: [Colors.white, Colors.orange[600]])),
-            // height: MediaQuery.of(context).size.height,
-            child: PageView(
-              controller: controller,
-              onPageChanged: (index) {
-                setState(() {
-                  slideIndex = index;
-                });
-              },
-              children: <Widget>[
-                sliderTile(
-                  imagePath: mySLides[0].getImageAssetPath(),
-                  title: mySLides[0].getTitle(),
-                  desc: mySLides[0].getDesc(),
-                ),
-                sliderTile(
-                  imagePath: mySLides[1].getImageAssetPath(),
-                  title: mySLides[1].getTitle(),
-                  desc: mySLides[1].getDesc(),
-                ),
-                sliderTile(
-                  imagePath: mySLides[2].getImageAssetPath(),
-                  title: mySLides[2].getTitle(),
-                  desc: mySLides[2].getDesc(),
-                )
-              ],
-            ),
+    return Scaffold(
+      body: SafeArea(
+        child: Container(
+          decoration: BoxDecoration(
+              gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [Colors.white, Colors.orange[600]])),
+          // height: MediaQuery.of(context).size.height,
+          child: PageView(
+            controller: controller,
+            onPageChanged: (index) {
+              setState(() {
+                slideIndex = index;
+              });
+            },
+            children: <Widget>[
+              sliderTile(
+                imagePath: mySLides[0].getImageAssetPath(),
+                title: mySLides[0].getTitle(),
+                desc: mySLides[0].getDesc(),
+              ),
+              sliderTile(
+                imagePath: mySLides[1].getImageAssetPath(),
+                title: mySLides[1].getTitle(),
+                desc: mySLides[1].getDesc(),
+              ),
+              sliderTile(
+                imagePath: mySLides[2].getImageAssetPath(),
+                title: mySLides[2].getTitle(),
+                desc: mySLides[2].getDesc(),
+              )
+            ],
           ),
         ),
-        bottomSheet: slideIndex != 2
-            ? Container(
-                decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                        colors: [Colors.white, Colors.orange[600]])),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    FlatButton(
-                      onPressed: () {
-                        controller.animateToPage(2,
-                            duration: Duration(milliseconds: 400),
-                            curve: Curves.linear);
-                      },
-                      splashColor: Colors.blue[0],
-                      child: Text(
-                        "SKIP",
-                        style: TextStyle(
-                            color: Colors.orange[900],
-                            fontWeight: FontWeight.w600),
-                      ),
+      ),
+      bottomSheet: slideIndex != 2
+          ? Container(
+              decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [Colors.white, Colors.orange[600]])),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  FlatButton(
+                    onPressed: () {
+                      controller.animateToPage(2,
+                          duration: Duration(milliseconds: 400),
+                          curve: Curves.linear);
+                    },
+                    splashColor: Colors.blue[0],
+                    child: Text(
+                      "SKIP",
+                      style: TextStyle(
+                          color: Colors.orange[900],
+                          fontWeight: FontWeight.w600),
                     ),
-                    Container(
-                      decoration: BoxDecoration(),
-                      child: Row(
-                        children: [
-                          for (int i = 0; i < 3; i++)
-                            i == slideIndex
-                                ? _buildPageIndicator(true)
-                                : _buildPageIndicator(false),
-                        ],
-                      ),
-                    ),
-                    FlatButton(
-                      onPressed: () {
-                        print("this is slideIndex: $slideIndex");
-                        controller.animateToPage(slideIndex + 1,
-                            duration: Duration(milliseconds: 500),
-                            curve: Curves.linear);
-                      },
-                      splashColor: Colors.blue[50],
-                      child: Text(
-                        "NEXT",
-                        style: TextStyle(
-                            color: Colors.orange[900],
-                            fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ],
-                ),
-              )
-            : InkWell(
-                onTap: () {
-                  Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (context) => registration_view()));
-                },
-                child: Container(
-                  // height: Platform.isIOS ? 70 : 60,
-                  height: 60.0,
-                  alignment: Alignment.center,
-                  color: Colors.orange[600],
-                  child: Text(
-                    "GET STARTED NOW",
-                    style: TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.w600),
                   ),
+                  Container(
+                    decoration: BoxDecoration(),
+                    child: Row(
+                      children: [
+                        for (int i = 0; i < 3; i++)
+                          i == slideIndex
+                              ? _buildPageIndicator(true)
+                              : _buildPageIndicator(false),
+                      ],
+                    ),
+                  ),
+                  FlatButton(
+                    onPressed: () {
+                      print("this is slideIndex: $slideIndex");
+                      controller.animateToPage(slideIndex + 1,
+                          duration: Duration(milliseconds: 500),
+                          curve: Curves.linear);
+                    },
+                    splashColor: Colors.blue[50],
+                    child: Text(
+                      "NEXT",
+                      style: TextStyle(
+                          color: Colors.orange[900],
+                          fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : InkWell(
+              onTap: () {
+                Navigator.of(context).pushReplacement(MaterialPageRoute(
+                    builder: (context) => registration_view()));
+              },
+              child: Container(
+                // height: Platform.isIOS ? 70 : 60,
+                height: 60.0,
+                alignment: Alignment.center,
+                color: Colors.orange[600],
+                child: Text(
+                  "GET STARTED NOW",
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.w600),
                 ),
               ),
-      ),
+            ),
     );
   }
 }
