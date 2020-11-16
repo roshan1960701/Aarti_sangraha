@@ -89,102 +89,155 @@ class _home_viewState extends State<home_view> {
           child: FutureBuilder(
               future: getImages(),
               builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-                try {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    return GridView.builder(
-                        shrinkWrap: true,
-                        itemCount: snapshot.data.docs.length,
-                        scrollDirection: Axis.vertical,
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 20.0,
-                          mainAxisSpacing: 20.0,
-                        ),
-                        itemBuilder: (BuildContext context, int index) {
-                          return InkWell(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    stops: [
-                                      0.1,
-                                      0.4,
-                                      0.6,
-                                      0.9
-                                    ],
-                                    colors: [
-                                      Colors.orange[800],
-                                      Colors.pink,
-                                      Colors.purple,
-                                      Colors.orange
-                                    ]),
-                                shape: BoxShape.rectangle,
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(12.0)),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Padding(
-                                    padding: EdgeInsets.only(top: 10.0),
-                                    child: Image.network(
-                                      snapshot.data.docs[index].data()["image"],
-                                      width: 120.0,
-                                      height: 120.0,
+                if (snapshot.hasData) {
+                  try {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      return GridView.builder(
+                          shrinkWrap: true,
+                          itemCount: snapshot.data.docs.length,
+                          scrollDirection: Axis.vertical,
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 20.0,
+                            mainAxisSpacing: 20.0,
+                          ),
+                          itemBuilder: (BuildContext context, int index) {
+                            return InkWell(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      stops: [
+                                        0.1,
+                                        0.4,
+                                        0.6,
+                                        0.9
+                                      ],
+                                      colors: [
+                                        Colors.orange[800],
+                                        Colors.pink,
+                                        Colors.purple,
+                                        Colors.orange
+                                      ]),
+                                  shape: BoxShape.rectangle,
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(12.0)),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Padding(
+                                      padding: EdgeInsets.only(top: 10.0),
+                                      child: Image.network(
+                                        snapshot.data.docs[index]
+                                            .data()["image"],
+                                        width: 120.0,
+                                        height: 120.0,
+                                      ),
                                     ),
-                                  ),
-                                  Padding(
-                                    padding: EdgeInsets.only(top: 20.0),
+                                    Padding(
+                                      padding: EdgeInsets.only(top: 20.0),
+                                      child: Text(
+                                        snapshot.data.docs[index]
+                                            .data()["name"],
+                                        style: TextStyle(
+                                            fontSize: 20.0,
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w600),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              onTap: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            aartiList_view()));
+                              },
+                            );
+                          });
+                    } else if (snapshot.connectionState ==
+                        ConnectionState.none) {
+                      showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title:
+                                  Text("Please check your Internet Connection"),
+                              actions: [
+                                FlatButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
                                     child: Text(
-                                      snapshot.data.docs[index].data()["name"],
-                                      style: TextStyle(
-                                          fontSize: 20.0,
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w600),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            onTap: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => aartiList_view()));
-                            },
+                                      "Close",
+                                      style: TextStyle(color: Colors.blue),
+                                    ))
+                              ],
+                            );
+                          });
+                    }
+                  } catch (Exception) {
+                    showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title:
+                                Text("Please check your Internet Connection"),
+                            actions: [
+                              FlatButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                  },
+                                  child: Text(
+                                    "Close",
+                                    style: TextStyle(color: Colors.blue),
+                                  ))
+                            ],
                           );
                         });
-                  } else if (snapshot.connectionState == ConnectionState.none) {
-                    return CircularProgressIndicator();
-                    // return Center(
-                    //     child: showDialog(
-                    //         context: context,
-                    //         builder: (BuildContext context) {
-                    //           return AlertDialog(
-                    //             title: Text("Warninig"),
-                    //           );
-                    //         }));
                   }
-                } catch (Exception) {
-                  showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: Text("Please check your Internet Connection"),
-                          actions: [
-                            FlatButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                },
-                                child: Text(
-                                  "Close",
-                                  style: TextStyle(color: Colors.blue),
-                                ))
-                          ],
-                        );
-                      });
+
+                  // try {
+                  //   if (snapshot.connectionState == ConnectionState.done) {
+
+                  //   } else if (snapshot.connectionState == ConnectionState.none) {
+                  //     return CircularProgressIndicator();
+                  //     // return Center(
+                  //     //     child: showDialog(
+                  //     //         context: context,
+                  //     //         builder: (BuildContext context) {
+                  //     //           return AlertDialog(
+                  //     //             title: Text("Warninig"),
+                  //     //           );
+                  //     //         }));
+                  //   }
+                  // } catch (Exception) {
+                  //   showDialog(
+                  //       context: context,
+                  //       builder: (BuildContext context) {
+                  //         return AlertDialog(
+                  //           title: Text("Please check your Internet Connection"),
+                  //           actions: [
+                  //             FlatButton(
+                  //                 onPressed: () {
+                  //                   Navigator.pop(context);
+                  //                 },
+                  //                 child: Text(
+                  //                   "Close",
+                  //                   style: TextStyle(color: Colors.blue),
+                  //                 ))
+                  //           ],
+                  //         );
+                  //       });
+                  // }
+
                 }
+                return Center(child: CircularProgressIndicator());
               }),
         ),
       ),
