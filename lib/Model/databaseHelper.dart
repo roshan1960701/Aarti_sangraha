@@ -4,10 +4,11 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 class databaseHelper {
-  static final _databasename = "user1.db";
+  static final _databasename = "Gods_data.db";
   static final _databaseversions = 1;
 
   static final table = "users_table";
+  static final godsTable = "gods_table";
 
   static final columnId = 'id';
   static final columnFirstName = 'first_name';
@@ -15,6 +16,10 @@ class databaseHelper {
   static final columnEmailId = 'email';
   static final columnDOB = 'dob';
   static final columnInsertedDate = 'inserted_date';
+
+  static final columnGodId = 'id';
+  static final columnGodName = 'god_name';
+  static final columnGodImage = 'god_image';
 
   static Database _database;
   databaseHelper._privateConstructor();
@@ -45,6 +50,13 @@ class databaseHelper {
         $columnDOB TEXT NOT NULL,
         $columnInsertedDate TEXT NOT NULL)
       ''');
+
+    await db.execute('''
+        CREATE TABLE $godsTable(
+        $columnGodId INTEGER PRIMARY KEY AUTOINCREMENT,
+        $columnGodName TEXT NOT NULL
+        ) 
+      ''');
   }
 
   Future<int> insert(Map<String, dynamic> row) async {
@@ -61,5 +73,15 @@ class databaseHelper {
     Database db = await instance.database;
     var res = await db.query(table, where: "user = ?", whereArgs: [name]);
     return res;
+  }
+
+  Future<int> insertGod(Map<String, dynamic> row) async {
+    Database db = await instance.database;
+    return await db.insert(godsTable, row);
+  }
+
+  Future<List<Map<String, dynamic>>> allGodQuery() async {
+    Database db = await instance.database;
+    return await db.query(godsTable);
   }
 }
