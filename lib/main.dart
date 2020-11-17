@@ -4,7 +4,6 @@ import 'package:aarti_sangraha/Screens/registration_view.dart';
 import 'package:aarti_sangraha/Screens/splashScreen_view.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -24,7 +23,7 @@ class _myAppState extends State<myApp> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Aarti Sangraha',
-      home: registration_view(),
+      home: home_view(),  
     );
   }
 }

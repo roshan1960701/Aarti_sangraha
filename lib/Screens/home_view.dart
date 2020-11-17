@@ -13,6 +13,9 @@ class home_view extends StatefulWidget {
 
 class _home_viewState extends State<home_view> {
   final firestoreInstance = FirebaseFirestore.instance;
+  final firestoreInstance1 = FirebaseFirestore.instance;
+  int position;
+  var value;
   final dbhelper = databaseHelper.instance;
   // startTime() async {
   //   var duration = new Duration(seconds: 6);
@@ -23,19 +26,39 @@ class _home_viewState extends State<home_view> {
   //   Navigator.pushReplacement(
   //       context, MaterialPageRoute(builder: (context) => registration_view()));
   // }
-  Future<QuerySnapshot> getImages() async {
+
+   @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    //getGaneshId();
+    //insertData();
+    //queryall();
+  }
+
+  Future<QuerySnapshot> getArtiSangraha() async {
     if (QuerySnapshot != null) {
-      return firestoreInstance.collection("Gods").get();
+      return firestoreInstance.collection("AartiSangraha").get();
     } else {
       return showDialog(
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
-              title: Text("Warninig"),
+              title: Text("Check Your Internet Connection"),
             );
           });
     }
   }
+
+  // Future<QuerySnapshot> getGaneshId() async{
+  //   firestoreInstance1.collection("AartiSangraha").get().then((querySnapshot) {
+  //   querySnapshot.docs.forEach((result) {
+  //       print(result.data());
+  //       print(result.data()["id"]);
+  //     });
+      
+  // });
+  // }
 
   Future<dynamic> shoDialog() async {
     showDialog(
@@ -62,13 +85,7 @@ class _home_viewState extends State<home_view> {
     });
   }
 
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    //insertData();
-    //queryall();
-  }
+ 
 
   @override
   Widget build(BuildContext context) {
@@ -87,7 +104,7 @@ class _home_viewState extends State<home_view> {
         body: Padding(
           padding: EdgeInsets.all(20.0),
           child: FutureBuilder(
-              future: getImages(),
+              future: getArtiSangraha(),
               builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
                 if (snapshot.hasData) {
                   try {
@@ -128,35 +145,37 @@ class _home_viewState extends State<home_view> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
-                                    Padding(
-                                      padding: EdgeInsets.only(top: 10.0),
-                                      child: Image.network(
-                                        snapshot.data.docs[index]
-                                            .data()["image"],
-                                        width: 120.0,
-                                        height: 120.0,
+                                    SafeArea(
+                                            child: Padding(
+                                        padding: EdgeInsets.only(top: 10.0),
+                                        child: Image.network(
+                                          snapshot.data.docs[index]
+                                              .data()["image"],
+                                          width: 120.0,
+                                          height: 120.0,
+                                        ),
                                       ),
                                     ),
-                                    Padding(
-                                      padding: EdgeInsets.only(top: 20.0),
-                                      child: Text(
-                                        snapshot.data.docs[index]
-                                            .data()["name"],
-                                        style: TextStyle(
-                                            fontSize: 20.0,
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w600),
+                                    SafeArea(
+                                              child: Padding(
+                                        padding: EdgeInsets.only(top: 5.0),
+                                        child: Text(
+                                          snapshot.data.docs[index]
+                                              .data()["name"],
+                                          style: TextStyle(
+                                              fontSize: 20.0,
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.w600),
+                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
                               onTap: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            aartiList_view()));
+                                position = index;
+                                 Navigator.push(context, MaterialPageRoute(builder: (context) => aartiList_view(value: position) ));
+                              // onPressed();
                               },
                             );
                           });
@@ -192,7 +211,7 @@ class _home_viewState extends State<home_view> {
                               FlatButton(
                                   onPressed: () {
                                     Navigator.pop(context);
-                                  },
+                                  } ,
                                   child: Text(
                                     "Close",
                                     style: TextStyle(color: Colors.blue),
