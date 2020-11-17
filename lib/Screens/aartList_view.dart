@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class aartiList_view extends StatefulWidget {
-  var value;
+  List value;
   aartiList_view({Key key,this.value}) : super(key: key);
   
 
@@ -12,7 +12,7 @@ class aartiList_view extends StatefulWidget {
 }
 
 class _aartiList_viewState extends State<aartiList_view> {
-  var value;
+  List value;
   _aartiList_viewState(this.value);
  
 final firestoreInstance = FirebaseFirestore.instance;
@@ -22,14 +22,14 @@ var title,img;
   void initState() {
     // TODO: implement initState
     super.initState();
-    getArtiSangraha();
-    ganeshAarti();
+    //getArtiSangraha();
+    //ganeshAarti();
     //insertData();
     //queryall();
   }
 
   Future<QuerySnapshot> getArtiSangraha() async {
-    firestoreInstance.collection("Gods").get().then((querySnapshot) {
+    firestoreInstance.collection("Aartis").get().then((querySnapshot) {
     querySnapshot.docs.forEach((result) {
         //print(result.data());
         //print(result.data()["id"]);
@@ -44,7 +44,7 @@ var title,img;
   }
 
   Future<QuerySnapshot> getListOfAarti() async{
-    firestoreInstance.collection("GodsAarti").get().then((value) => 
+    firestoreInstance.collection("Aartis").get().then((value) => 
           value.docs.forEach((element) {
             title = element.data()["title"];
             img = element.data()["image"];
@@ -55,7 +55,7 @@ var title,img;
   }
 
  void ganeshAarti() async{
-    firestoreInstanceSecond.collection("GodsAarti").where("category", arrayContains: "ganesh").get().then((value) => 
+    firestoreInstanceSecond.collection("Aartis").where("category", arrayContains: "ganesh").get().then((value) => 
     value.docs.forEach((element) {
       print(element.data());
     })

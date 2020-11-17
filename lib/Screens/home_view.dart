@@ -17,6 +17,8 @@ class _home_viewState extends State<home_view> {
   int position;
   var value;
   final dbhelper = databaseHelper.instance;
+  List AartiSangrahaId = new List();
+
   // startTime() async {
   //   var duration = new Duration(seconds: 6);
   //   return new Timer(duration, route);
@@ -31,7 +33,7 @@ class _home_viewState extends State<home_view> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    //getGaneshId();
+    getAartidSangrahaID();
     //insertData();
     //queryall();
   }
@@ -50,15 +52,16 @@ class _home_viewState extends State<home_view> {
     }
   }
 
-  // Future<QuerySnapshot> getGaneshId() async{
-  //   firestoreInstance1.collection("AartiSangraha").get().then((querySnapshot) {
-  //   querySnapshot.docs.forEach((result) {
-  //       print(result.data());
-  //       print(result.data()["id"]);
-  //     });
+  Future<QuerySnapshot> getAartidSangrahaID() async{
+    firestoreInstance1.collection("AartiSangraha").get().then((querySnapshot) {
+    querySnapshot.docs.forEach((result) {
+        AartiSangrahaId.add(result.id);
+        print(result.id);
+        //print(result.data());
+      });
       
-  // });
-  // }
+  });
+  }
 
   Future<dynamic> shoDialog() async {
     showDialog(
@@ -89,7 +92,7 @@ class _home_viewState extends State<home_view> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
+    return WillPopScope(  
       child: Scaffold(
         appBar: AppBar(
           actions: [
@@ -174,7 +177,7 @@ class _home_viewState extends State<home_view> {
                               ),
                               onTap: () {
                                 position = index;
-                                 Navigator.push(context, MaterialPageRoute(builder: (context) => aartiList_view(value: position) ));
+                                 Navigator.push(context, MaterialPageRoute(builder: (context) => aartiList_view(value: AartiSangrahaId) ));
                               // onPressed();
                               },
                             );
