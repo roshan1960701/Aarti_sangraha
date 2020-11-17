@@ -1,17 +1,20 @@
 import 'dart:convert';
-
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class specificAarti_view extends StatefulWidget {
-  specificAarti_view({Key key}) : super(key: key);
+  var id;
+  specificAarti_view({Key key, this.id}) : super(key: key);
 
   @override
-  _specificAarti_viewState createState() => _specificAarti_viewState();
+  _specificAarti_viewState createState() => _specificAarti_viewState(id);
 }
 
 class _specificAarti_viewState extends State<specificAarti_view> {
+  var id;
+  _specificAarti_viewState(this.id);
+
   final firestoreInstance = FirebaseFirestore.instance;
   // Map data;
   // List<String> godsData = new List<String>();
@@ -24,8 +27,11 @@ class _specificAarti_viewState extends State<specificAarti_view> {
   //   });
   // }
 
-  Future<QuerySnapshot> getImages() {
-    return firestoreInstance.collection("Gods").get();
+  Future getImages() async {
+    var result = firestoreInstance.collection("Aartis").doc(id).get();
+    if (result != null) {
+      print(result);
+    }
   }
 
   @override
@@ -60,7 +66,6 @@ class _specificAarti_viewState extends State<specificAarti_view> {
                     }),
               ),
             ),
-
           ],
         )),
       ),

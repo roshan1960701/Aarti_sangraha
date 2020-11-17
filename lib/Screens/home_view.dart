@@ -16,6 +16,7 @@ class _home_viewState extends State<home_view> {
   final firestoreInstance1 = FirebaseFirestore.instance;
   int position;
   var value;
+  var aartiSangId;
   final dbhelper = databaseHelper.instance;
   List AartiSangrahaId = new List();
 
@@ -29,11 +30,11 @@ class _home_viewState extends State<home_view> {
   //       context, MaterialPageRoute(builder: (context) => registration_view()));
   // }
 
-   @override
+  @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    getAartidSangrahaID();
+    //getAartidSangrahaID();
     //insertData();
     //queryall();
   }
@@ -52,15 +53,14 @@ class _home_viewState extends State<home_view> {
     }
   }
 
-  Future<QuerySnapshot> getAartidSangrahaID() async{
+  Future<QuerySnapshot> getAartidSangrahaID() async {
     firestoreInstance1.collection("AartiSangraha").get().then((querySnapshot) {
-    querySnapshot.docs.forEach((result) {
+      querySnapshot.docs.forEach((result) {
         AartiSangrahaId.add(result.id);
         print(result.id);
         //print(result.data());
       });
-      
-  });
+    });
   }
 
   Future<dynamic> shoDialog() async {
@@ -88,11 +88,9 @@ class _home_viewState extends State<home_view> {
     });
   }
 
- 
-
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(  
+    return WillPopScope(
       child: Scaffold(
         appBar: AppBar(
           actions: [
@@ -149,7 +147,7 @@ class _home_viewState extends State<home_view> {
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     SafeArea(
-                                            child: Padding(
+                                      child: Padding(
                                         padding: EdgeInsets.only(top: 10.0),
                                         child: Image.network(
                                           snapshot.data.docs[index]
@@ -160,7 +158,7 @@ class _home_viewState extends State<home_view> {
                                       ),
                                     ),
                                     SafeArea(
-                                              child: Padding(
+                                      child: Padding(
                                         padding: EdgeInsets.only(top: 5.0),
                                         child: Text(
                                           snapshot.data.docs[index]
@@ -172,13 +170,19 @@ class _home_viewState extends State<home_view> {
                                         ),
                                       ),
                                     ),
+                                    // Text(snapshot.data.docs[index].id)
                                   ],
                                 ),
                               ),
-                              onTap: () {
-                                position = index;
-                                 Navigator.push(context, MaterialPageRoute(builder: (context) => aartiList_view(value: AartiSangrahaId) ));
-                              // onPressed();
+                              onTap: () async {
+                                var docId = snapshot.data.docs[index].id;
+                                print(docId);
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            aartiList_view(value: docId)));
+                                // onPressed();
                               },
                             );
                           });
@@ -214,7 +218,7 @@ class _home_viewState extends State<home_view> {
                               FlatButton(
                                   onPressed: () {
                                     Navigator.pop(context);
-                                  } ,
+                                  },
                                   child: Text(
                                     "Close",
                                     style: TextStyle(color: Colors.blue),
