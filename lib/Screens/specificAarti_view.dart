@@ -16,28 +16,53 @@ class _specificAarti_viewState extends State<specificAarti_view> {
   _specificAarti_viewState(this.id);
 
   final firestoreInstance = FirebaseFirestore.instance;
-  // Map data;
-  // List<String> godsData = new List<String>();
+  String aarti,image,mp3,name_marathi;
 
-  // void get() async {
-  //   firestoreInstance.collection("Gods").get().then((value) {
-  //     value.docs.forEach((element) {
-  //       print(element.data());
-  //     });
-  //   });
-  // }
 
-  Future getImages() async {
-    var result = firestoreInstance.collection("Aartis").doc(id).get();
-    if (result != null) {
-      print(result);
-    }
+  Future<QuerySnapshot> getImages() async {
+    // DocumentReference docRef = firestoreInstance.collection("Aartis").get();
+    firestoreInstance.collection("Aartis").doc(id).get().then((value) => {
+    
+      
+    });
+    // var result = firestoreInstance.collection("Aartis").doc(id).get();
+    // if (result != null) {
+    //   print(result);
+    // }
   }
+    Future<QuerySnapshot> getImagesOne() async {
+    firestoreInstance.collection("Aartis").doc(id).get().then((value){
+       if(value.id.length > 0){
+         setState(() {
+        name_marathi = value["name_marathi"]; 
+       aarti = value["aarti"];
+       image = value["image"];
+       mp3 = value["mp3"];    
+         });
+       
+      print(name_marathi);
+      print(aarti);
+      print(image);
+      print(mp3);  
+      // var data= value.id;
+      // print(data);
+    }
+    }
+   
+    );
+
+    // var result = firestoreInstance.collection("Aartis").doc(id).get();
+    // if (result != null) {
+    //   print(result);
+    // }
+  }
+
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    getImagesOne();
     // get();
   }
 
@@ -45,29 +70,43 @@ class _specificAarti_viewState extends State<specificAarti_view> {
   Widget build(BuildContext context) {
     return WillPopScope(
       child: Scaffold(
+        backgroundColor: Colors.grey[200],
         resizeToAvoidBottomPadding: false,
         body: SafeArea(
+            child: SingleChildScrollView(
+            scrollDirection: Axis.vertical,
             child: Column(
-          children: [
-            Padding(
-              padding: EdgeInsets.all(10.0),
-              child: Align(
-                alignment: Alignment.topLeft,
-                child: MaterialButton(
-                    minWidth: 80.0,
-                    height: 35.0,
-                    color: Colors.blue,
-                    shape: StadiumBorder(),
-                    child: IconButton(
-                        icon: Icon(Icons.arrow_back_ios, color: Colors.white),
-                        onPressed: null),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    }),
+            children: [
+              Padding(
+                padding: EdgeInsets.all(10.0),
+                child: Align(
+                  alignment: Alignment.topLeft,
+                  child:IconButton(
+                          icon: Icon(Icons.arrow_back_ios, color: Colors.blue,size: 24.0,),
+                          onPressed: (){
+                            Navigator.pop(context);
+                          }),
+                      
+                ),
               ),
-            ),
+              Container(
+                width: 130.0,
+                height: 130.0,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                  child: Image.network('$image'))),
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 10.0),
+                     child: Text('$name_marathi',style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 25.0
+                  ),),
+              ),
+              Container(child: Text('$aarti',style: TextStyle(fontSize: 18.0),)),
+
           ],
-        )),
+        ),
+            )),
       ),
     );
   }

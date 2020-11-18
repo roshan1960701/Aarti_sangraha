@@ -23,7 +23,7 @@ class _myAppState extends State<myApp> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Aarti Sangraha',
-      home: home_view(),  
+      home: onboarding_view(),  
     );
   }
 }

@@ -171,12 +171,12 @@ class _home_viewState extends State<home_view> {
                                       ),
                                     ),
                                     // Text(snapshot.data.docs[index].id)
-                                  ],
+                                  ], 
                                 ),
                               ),
                               onTap: () async {
                                 var docId = snapshot.data.docs[index].id;
-                                print(docId);
+                                //print(docId);
                                 Navigator.push(
                                     context,
                                     MaterialPageRoute(

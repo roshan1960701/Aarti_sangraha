@@ -20,7 +20,7 @@ class sliderTile extends StatelessWidget {
           Text(
             title,
             textAlign: TextAlign.center,
-            style: TextStyle(fontWeight: FontWeight.w500, fontSize: 20),
+            style: TextStyle(fontWeight: FontWeight.w500, fontSize: 20,color: Colors.orange[900]),
           ),
           // SizedBox(),
           Text(desc,

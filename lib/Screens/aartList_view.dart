@@ -123,7 +123,7 @@ class _aartiList_viewState extends State<aartiList_view> {
                       ),
                       onTap: () async {
                         var docID = snapshot.data.docs[index].id;
-                        print(docID);
+                       // print(docID);
                         Navigator.push(
                             context,
                             MaterialPageRoute(
