@@ -102,7 +102,9 @@ class _specificAarti_viewState extends State<specificAarti_view> {
                   fontSize: 25.0
                   ),),
               ),
-              Container(child: Text('$aarti',style: TextStyle(fontSize: 18.0),)),
+              Container(
+                 width: MediaQuery.of(context).size.width * 0.9 ,
+                child: Text('$aarti',style: TextStyle(fontSize: 18.0,fontWeight: FontWeight.w500),)),
 
           ],
         ),
