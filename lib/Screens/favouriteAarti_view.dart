@@ -1,3 +1,4 @@
+import 'package:aarti_sangraha/Screens/home_view.dart';
 import 'package:aarti_sangraha/drawer.dart';
 import 'package:flutter/material.dart';
 
@@ -13,9 +14,14 @@ class _favouriteAarti_viewState extends State<favouriteAarti_view> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+            icon: Icon(Icons.arrow_back_ios),
+            onPressed: () {
+              Navigator.pushReplacement(context,
+                  MaterialPageRoute(builder: (context) => home_view()));
+            }),
         actions: [IconButton(icon: Icon(Icons.search), onPressed: () {})],
       ),
-      drawer: drawer(),
       body: Text("favourite Aarti"),
     );
   }

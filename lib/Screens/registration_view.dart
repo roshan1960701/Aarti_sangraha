@@ -4,6 +4,8 @@ import 'package:email_validator/email_validator.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:progress_dialog/progress_dialog.dart';
 import 'package:aarti_sangraha/Model/databaseHelper.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class registration_view extends StatefulWidget {
   registration_view({Key key}) : super(key: key);
@@ -14,11 +16,14 @@ class registration_view extends StatefulWidget {
 
 class _registration_viewState extends State<registration_view> {
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  final firestoreInstance = FirebaseFirestore.instance;
   final dbhelper = databaseHelper.instance;
   final dbRef = FirebaseDatabase.instance.reference().child("Users");
   final TextEditingController fistNameController = new TextEditingController();
   final TextEditingController lastNameController = new TextEditingController();
   final TextEditingController emailController = new TextEditingController();
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   String name;
   String lastName;
@@ -62,6 +67,61 @@ class _registration_viewState extends State<registration_view> {
     //           Navigator.of(context).pushReplacement(
     //               MaterialPageRoute(
     //                   builder: (context) => home_view()));
+  }
+
+  Future<void> sendSignInLinkToEmail(String email,
+      [ActionCodeSettings actionCodeSettings]) {
+    try {
+      return _auth.sendSignInLinkToEmail(email: email);
+    } catch (e) {
+      print("This is Exception" + e);
+    }
+  }
+
+  Future<void> _signInWithEmailAndLink() async {
+    email = emailController.text;
+    return await _auth
+        .signInWithEmailLink(
+            email: "roshanw1998@gmail.com", emailLink: "roshanw1998@gmail.com")
+        .catchError(
+            (onError) => print('Error signing in with email link $onError'))
+        .then((value) {
+      var userEmail = value.user;
+      print(userEmail);
+      print("successfully signed in with email and password");
+    });
+  }
+
+  Future<void> _emailSignIn() async {
+    email = "roshanw1998@gmail.com";
+    return await _auth.sendSignInLinkToEmail(
+        email: email,
+        actionCodeSettings: ActionCodeSettings(
+            url: 'https://flutterauth.page.link/',
+            handleCodeInApp: true,
+            androidPackageName: 'com.example.aarti_sangraha',
+            androidMinimumVersion: '1'));
+  }
+
+  Future<void> _resisterInFirestore() async {
+    firestoreInstance.collection("Users").add({
+      "First_name": fistNameController.text,
+      "Last_name": lastNameController.text,
+      "email": emailController.text,
+      "DOB": selectedDate.toString(),
+      "Inserted_date": insertedDate
+    }).then((value) {
+      pr.show();
+      Future.delayed(Duration(seconds: 4)).then((value) {
+        pr.hide().whenComplete(() {
+          Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => home_view()));
+        });
+      });
+      fistNameController.clear();
+      lastNameController.clear();
+      emailController.clear();
+    });
   }
 
   void queryall() async {
@@ -122,6 +182,9 @@ class _registration_viewState extends State<registration_view> {
     super.initState();
     newDate.subtract(Duration());
     queryall();
+    _signInWithEmailAndLink();
+    _emailSignIn();
+    sendSignInLinkToEmail("roshanw1998@gmail.com");
   }
 
   @override
@@ -300,9 +363,18 @@ class _registration_viewState extends State<registration_view> {
                     onPressed: () async {
                       try {
                         if (formKey.currentState.validate()) {
-                          insertData();
+                          _resisterInFirestore();
                         }
-                      } catch (Exception) {}
+                      } catch (Exception) {
+                        showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title: Text(
+                                    "Please check your Internet Connection!!!"),
+                              );
+                            });
+                      }
 
                       // try {
                       //   if (formKey.currentState.validate()) {
