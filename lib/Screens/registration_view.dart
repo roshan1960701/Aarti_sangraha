@@ -56,7 +56,7 @@ class _registration_viewState extends State<registration_view> {
     final id = await dbhelper.insert(row);
     print(id);
     pr.show();
-    Future.delayed(Duration(seconds: 3)).then((value) {
+    Future.delayed(Duration(seconds: 2)).then((value) {
       pr.hide().whenComplete(() {
         Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => home_view()));
@@ -112,7 +112,7 @@ class _registration_viewState extends State<registration_view> {
       "Inserted_date": insertedDate
     }).then((value) {
       pr.show();
-      Future.delayed(Duration(seconds: 4)).then((value) {
+      Future.delayed(Duration(seconds: 2)).then((value) {
         pr.hide().whenComplete(() {
           Navigator.of(context).pushReplacement(
               MaterialPageRoute(builder: (context) => home_view()));

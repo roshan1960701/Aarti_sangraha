@@ -1,6 +1,7 @@
 import 'package:aarti_sangraha/Screens/specificAarti_view.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class aartiList_view extends StatefulWidget {
   var value;
@@ -17,7 +18,18 @@ class _aartiList_viewState extends State<aartiList_view> {
 
   final firestoreInstance = FirebaseFirestore.instance;
   final firestoreInstanceSecond = FirebaseFirestore.instance;
+  final TextEditingController searchController = new TextEditingController();
   var title, img;
+
+  bool _isSearching = false;
+  String searchQuery = "Search query";
+
+  Icon cusSearchIcon = Icon(
+    Icons.search,
+    color: Colors.white,
+  );
+  Widget cusAppBar = Text("Search Bar AppBar");
+
   @override
   void initState() {
     // TODO: implement initState
@@ -50,7 +62,6 @@ class _aartiList_viewState extends State<aartiList_view> {
   //             // print(element.data()["title"]);
   //           }));
   // }
-
   Future<QuerySnapshot> getAartis() async {
     if (QuerySnapshot != null) {
       return firestoreInstanceSecond
@@ -89,7 +100,34 @@ class _aartiList_viewState extends State<aartiList_view> {
               onPressed: () {
                 Navigator.pop(context);
               }),
-          actions: [IconButton(icon: Icon(Icons.search), onPressed: () {})],
+          actions: [
+            IconButton(
+                icon: cusSearchIcon,
+                onPressed: () {
+                  // showSearch(context: context, delegate: DataSearch());
+                  setState(() {
+                    if (this.cusSearchIcon.icon == Icons.search) {
+                      this.cusSearchIcon = Icon(Icons.cancel);
+                      this.cusAppBar = TextField(
+                        controller: searchController,
+                        textInputAction: TextInputAction.go,
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                          hintText: "Search Aarti",
+                        ),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16.0,
+                        ),
+                        //onChanged: (query) => updateSearchQuery(query),
+                      );
+                    } else {
+                      this.cusSearchIcon = Icon(Icons.search);
+                      this.cusAppBar = Text("Roshan");
+                    }
+                  });
+                }),
+          ],
         ),
         body: FutureBuilder(
           future: getAartis(),
@@ -123,7 +161,7 @@ class _aartiList_viewState extends State<aartiList_view> {
                       ),
                       onTap: () async {
                         var docID = snapshot.data.docs[index].id;
-                       // print(docID);
+                        // print(docID);
                         Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -138,5 +176,98 @@ class _aartiList_viewState extends State<aartiList_view> {
         ),
       ),
     );
+  }
+}
+
+class DataSearch extends SearchDelegate<String> {
+  final firestore = Firestore.instance;
+
+  final cities = [
+    "colima",
+    "monterrey",
+    "jalisco",
+    "sinaloa",
+    "cdmx",
+    "sonora",
+    "baja california",
+    "chiapa",
+    "tabasco"
+  ];
+
+  // final recentCities = [
+  //   "colima",
+  //   "monterrey",
+  //   "jalisco",
+  // ];
+
+  @override
+  List<Widget> buildActions(BuildContext context) {
+    // TODO: implement buildActions
+    return [
+      IconButton(
+          icon: Icon(Icons.clear),
+          onPressed: () {
+            query = "";
+          })
+    ];
+    throw UnimplementedError();
+  }
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    // TODO: implement buildLeading
+    return IconButton(
+      icon: AnimatedIcon(
+        icon: AnimatedIcons.menu_arrow,
+        progress: transitionAnimation,
+      ),
+      onPressed: () {
+        close(context, null);
+      },
+    );
+    throw UnimplementedError();
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    // TODO: implement buildResults
+    return Center(
+      child: Container(
+          height: 100.0,
+          width: 100.0,
+          child: Card(
+            color: Colors.red,
+            child: Center(
+              child: Text(query),
+            ),
+          )),
+    );
+    throw UnimplementedError();
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    // TODO: implement buildSuggestions
+    final suggestionList = cities.where((p) => p.startsWith(query)).toList();
+
+    return ListView.builder(
+      itemBuilder: (context, index) => ListTile(
+        onTap: () {
+          showResults(context);
+        },
+        title: RichText(
+            text: TextSpan(
+                text: suggestionList[index].substring(0, query.length),
+                style:
+                    TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                children: [
+              TextSpan(
+                  text: suggestionList[index].substring(query.length),
+                  style: TextStyle(color: Colors.grey))
+            ])),
+      ),
+      itemCount: suggestionList.length,
+    );
+    throw UnimplementedError();
   }
 }
