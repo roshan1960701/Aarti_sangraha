@@ -4,6 +4,7 @@ import 'package:flutter/painting.dart';
 import 'package:share/share.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:audioplayers/audio_cache.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class specificAarti_view extends StatefulWidget {
   var id;
@@ -26,7 +27,17 @@ class _specificAarti_viewState extends State<specificAarti_view> {
   AudioCache audioCache;
   String localFilePath;
 
-  String aarti, image, mp3, name_marathi;
+  String aarti = " ", image, mp3, name_marathi = " ", name_english;
+
+  var checkFavourite;
+  bool isFavourite = false;
+  Icon favouriteIcon = Icon(
+    Icons.favorite_border,
+  );
+  int iconTaped = 0;
+
+  List<String> aartis = new List<String>();
+  List<String> savedAartis = List<String>();
 
   @override
   void initState() {
@@ -34,8 +45,56 @@ class _specificAarti_viewState extends State<specificAarti_view> {
 
     super.initState();
     getSpecificAarti();
+    //getSpAart();
     initPlayer();
+    checkIsFavourite();
     // get();
+  }
+
+  addToFavouriteFirestore() async {
+    DocumentReference documentReference =
+        firestoreInstance.collection("FavouriteAartis").doc(id);
+    documentReference.set({
+      'name_marathi': name_marathi,
+      'image': image,
+      'mp3': mp3,
+      'aarti': aarti,
+      'name_english': name_english,
+    });
+  }
+
+  checkIsFavourite() async {
+    checkFavourite = id;
+    // print(checkFavourite);
+    firestoreInstance.collection("FavouriteAartis").get().then((querySnapshot) {
+      querySnapshot.docs.forEach((result) {
+        //   print(result.id);
+
+        if (id == result.id) {
+          setState(() {
+            isFavourite = true;
+            // print(isFavourite);
+          });
+        }
+        //print(result.data());
+      });
+    });
+  }
+
+  removeFromFavouriteFirestore() async {
+    await firestoreInstance.collection("FavouriteAartis").doc(id).delete();
+  }
+
+  addToFavouriteAarti() async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    sharedPreferences.setString('name_marathi', name_marathi);
+    sharedPreferences.setString('image', image);
+  }
+
+  removeFavouriteAarti() async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    sharedPreferences.remove('name_marathi');
+    sharedPreferences.remove('image');
   }
 
   void initPlayer() async {
@@ -162,24 +221,26 @@ class _specificAarti_viewState extends State<specificAarti_view> {
   }
 
   Future<QuerySnapshot> getSpecificAarti() async {
-    firestoreInstance.collection("Aartis").doc(id).get().then((value) {
-      if (value.id.length > 0) {
-        setState(() {
-          name_marathi = value["name_marathi"];
-          aarti = value["aarti"];
-          image = value["image"];
-          mp3 = value["mp3"];
-        });
+    if (QuerySnapshot != null) {
+      firestoreInstance.collection("Aartis").doc(id).get().then((value) {
+        if (value.id.length > 0) {
+          setState(() {
+            name_marathi = value["name_marathi"];
+            aarti = value["aarti"];
+            image = value["image"];
+            mp3 = value["mp3"];
+            name_english = value["name_english"];
+          });
 
-        // print(name_marathi);
-        // print(aarti);
-        // print(image);
-        // print(mp3);
-        // var data= value.id;
-        // print(data);
-      }
-    });
-
+          // print(name_marathi);
+          // print(aarti);
+          // print(image);
+          // print(mp3);
+          // var data= value.id;
+          // print(data);
+        }
+      });
+    }
     // var result = firestoreInstance.collection("Aartis").doc(id).get();
     // if (result != null) {
     //   print(result);
@@ -233,29 +294,63 @@ class _specificAarti_viewState extends State<specificAarti_view> {
                         TextStyle(fontSize: 18.0, fontWeight: FontWeight.w500),
                   )),
               Padding(
-                padding: const EdgeInsets.only(
-                  top: 30.0,
-                ),
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: FloatingActionButton(
-                    backgroundColor: Colors.green,
-                    onPressed: () async {
-                      Share.share('To listen this Aarti ' +
-                          '$name_marathi' +
-                          ' Download the Mp3 File\n' +
-                          '$mp3');
-                    },
-                    child: IconButton(
-                      tooltip: "Click to share",
-                      icon: Icon(
-                        Icons.share,
-                        color: Colors.white,
-                      ),
-                    ),
+                  padding: const EdgeInsets.only(
+                    top: 30.0,
                   ),
-                ),
-              ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      FloatingActionButton(
+                        backgroundColor: Colors.green,
+                        onPressed: () async {
+                          Share.share('To listen this Aarti ' +
+                              '$name_marathi' +
+                              ' Download the Mp3 File\n' +
+                              '$mp3');
+                        },
+                        child: IconButton(
+                          tooltip: "Click to share",
+                          icon: Icon(
+                            Icons.share,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 40.0,
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          isFavourite ? Icons.favorite : Icons.favorite_border,
+                          color: isFavourite ? Colors.red : null,
+                        ),
+                        onPressed: () async {
+                          if (isFavourite) {
+                            // savedWords.remove(word);
+                            await removeFromFavouriteFirestore();
+                            isFavourite = false;
+                          } else {
+                            await addToFavouriteFirestore();
+                            isFavourite = true;
+                          }
+                          setState(() {});
+                          // setState(() {
+                          //   if (iconTaped == 0) {
+                          //     addToFavouriteFirestore();
+                          //     favouriteIcon = Icon(
+                          //       Icons.favorite,
+                          //       color: Colors.red,
+                          //     );
+                          //     iconTaped = 1;
+                          //   } else {
+                          //     favouriteIcon = Icon(Icons.favorite_border);
+                          //     iconTaped = 0;
+                          //   }
+                          // }
+                        },
+                      )
+                    ],
+                  )),
               Padding(
                 padding: EdgeInsets.only(top: 20.0),
                 child: LocalAudio(),

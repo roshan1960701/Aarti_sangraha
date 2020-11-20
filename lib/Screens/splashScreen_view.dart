@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:aarti_sangraha/Screens/onboarding_view.dart';
+import 'package:aarti_sangraha/Screens/registration_view.dart';
 import 'package:flutter/material.dart';
 
 class splashScreen_view extends StatefulWidget {
@@ -12,7 +13,7 @@ class splashScreen_view extends StatefulWidget {
 class _splashScreen_viewState extends State<splashScreen_view> {
   void completed() {
     Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => onboarding_view()));
+        MaterialPageRoute(builder: (context) => registration_view()));
   }
 
   @override

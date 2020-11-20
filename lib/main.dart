@@ -4,6 +4,7 @@ import 'package:aarti_sangraha/Screens/registration_view.dart';
 import 'package:aarti_sangraha/Screens/splashScreen_view.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,7 +25,34 @@ class _myAppState extends State<myApp> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Aarti Sangraha',
-      home: registration_view(),
+      home: new homePage(),
     );
+  }
+}
+
+class homePage extends StatefulWidget {
+  @override
+  _homePageState createState() => _homePageState();
+}
+
+class _homePageState extends State<homePage> {
+  Future checkFirstSeen() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool _seen = (prefs.getBool('seen') ?? false);
+
+    if (_seen) {
+      Navigator.of(context).pushReplacement(
+          new MaterialPageRoute(builder: (context) => new splashScreen_view()));
+    } else {
+      await prefs.setBool('seen', true);
+      Navigator.of(context).pushReplacement(
+          new MaterialPageRoute(builder: (context) => new onboarding_view()));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    checkFirstSeen();
+    return Scaffold();
   }
 }
