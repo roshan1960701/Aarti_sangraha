@@ -17,6 +17,8 @@ class specificAarti_view extends StatefulWidget {
 class _specificAarti_viewState extends State<specificAarti_view> {
   var id;
 
+  bool isPlaying;
+
   _specificAarti_viewState(this.id);
   final firestoreInstance = FirebaseFirestore.instance;
   var mp3Time;
@@ -32,7 +34,8 @@ class _specificAarti_viewState extends State<specificAarti_view> {
   var checkFavourite;
   bool isFavourite = false;
   Icon favouriteIcon = Icon(
-    Icons.favorite_border,
+    Icons.play_arrow,
+    color: Colors.red,
   );
   int iconTaped = 0;
 
@@ -98,6 +101,8 @@ class _specificAarti_viewState extends State<specificAarti_view> {
   }
 
   void initPlayer() async {
+    iconTaped = 1;
+    isPlaying = true;
     advancedPlayer = new AudioPlayer();
     audioCache = new AudioCache(fixedPlayer: advancedPlayer);
 
@@ -157,26 +162,65 @@ class _specificAarti_viewState extends State<specificAarti_view> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconButton(
-                  onPressed: () => advancedPlayer.play('$mp3'),
-                  icon: Icon(
-                    Icons.play_arrow,
-                    size: 28.0,
-                    color: Colors.pink[900],
-                  )),
-              IconButton(
-                  onPressed: () => advancedPlayer.pause(),
-                  icon: Icon(
-                    Icons.pause,
-                    size: 25.0,
-                    color: Colors.pink[900],
-                  )),
-              IconButton(
-                  onPressed: () => advancedPlayer.stop(),
-                  icon: Icon(
-                    Icons.stop,
-                    size: 25.0,
-                    color: Colors.pink[900],
-                  ))
+                  icon: favouriteIcon,
+                  onPressed: () async {
+                    setState(() {
+                      if (iconTaped == 0) {
+                        advancedPlayer.play('$mp3');
+                        favouriteIcon = Icon(
+                          Icons.pause,
+                          color: Colors.pink[900],
+                        );
+                        iconTaped = 1;
+                      } else {
+                        advancedPlayer.pause();
+                        favouriteIcon = Icon(
+                          Icons.play_arrow,
+                          color: Colors.pink[900],
+                        );
+                        iconTaped = 0;
+                      }
+                    });
+
+                    //   if (isPlaying) {
+                    //     advancedPlayer.play('$mp3');
+                    //     isPlaying = false;
+                    //   } else if (!isPlaying) {
+                    //     advancedPlayer.pause();
+                    //     isPlaying = true;
+                    //   }
+                    // },
+                    // icon: isPlaying
+                    //     ? Icon(
+                    //         Icons.play_arrow,
+                    //         size: 28.0,
+                    //         color: Colors.pink[900],
+                    //       )
+                    //     : Icon(
+                    //         Icons.pause,
+                    //         size: 25.0,
+                    //         color: Colors.pink[900],
+                    //       )
+                    //
+                  }),
+
+              // IconButton(
+              //     onPressed: () => advancedPlayer.pause(),
+              //     icon: Icon(
+              //       Icons.pause,
+              //       size: 25.0,
+              //       color: Colors.pink[900],
+              //     )),
+              // IconButton(
+              //     onPressed: () {
+              //       advancedPlayer.stop();
+              //       //_position = Duration(minutes: 0, seconds: 0);
+              //     },
+              //     icon: Icon(
+              //       Icons.stop,
+              //       size: 25.0,
+              //       color: Colors.pink[900],
+              //     ))
             ],
           ),
           slider(),
@@ -204,9 +248,11 @@ class _specificAarti_viewState extends State<specificAarti_view> {
         min: 0.0,
         max: _duration.inSeconds.toDouble(),
         onChanged: (double value) {
+          value = value;
+          seekToSecond(value.toInt());
           setState(() {
-            seekToSecond(value.toInt());
-            value = value;
+            // value = value;
+            // seekToSecond(value.toInt());
           });
         });
   }
@@ -250,6 +296,10 @@ class _specificAarti_viewState extends State<specificAarti_view> {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
+      onWillPop: () async {
+        advancedPlayer.stop();
+        Navigator.pop(context);
+      },
       child: Scaffold(
         backgroundColor: Colors.grey[200],
         resizeToAvoidBottomPadding: false,
@@ -269,6 +319,7 @@ class _specificAarti_viewState extends State<specificAarti_view> {
                         size: 24.0,
                       ),
                       onPressed: () {
+                        advancedPlayer.stop();
                         Navigator.pop(context);
                       }),
                 ),
