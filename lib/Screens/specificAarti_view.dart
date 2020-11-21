@@ -35,7 +35,7 @@ class _specificAarti_viewState extends State<specificAarti_view> {
   bool isFavourite = false;
   Icon favouriteIcon = Icon(
     Icons.play_arrow,
-    color: Colors.red,
+    color: Colors.pink[900],
   );
   int iconTaped = 0;
 
@@ -162,65 +162,65 @@ class _specificAarti_viewState extends State<specificAarti_view> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconButton(
-                  icon: favouriteIcon,
-                  onPressed: () async {
-                    setState(() {
-                      if (iconTaped == 0) {
-                        advancedPlayer.play('$mp3');
-                        favouriteIcon = Icon(
-                          Icons.pause,
-                          color: Colors.pink[900],
-                        );
-                        iconTaped = 1;
-                      } else {
-                        advancedPlayer.pause();
-                        favouriteIcon = Icon(
-                          Icons.play_arrow,
-                          color: Colors.pink[900],
-                        );
-                        iconTaped = 0;
-                      }
-                    });
+                //icon: favouriteIcon,
 
-                    //   if (isPlaying) {
-                    //     advancedPlayer.play('$mp3');
-                    //     isPlaying = false;
-                    //   } else if (!isPlaying) {
-                    //     advancedPlayer.pause();
-                    //     isPlaying = true;
-                    //   }
-                    // },
-                    // icon: isPlaying
-                    //     ? Icon(
-                    //         Icons.play_arrow,
-                    //         size: 28.0,
-                    //         color: Colors.pink[900],
-                    //       )
-                    //     : Icon(
-                    //         Icons.pause,
-                    //         size: 25.0,
-                    //         color: Colors.pink[900],
-                    //       )
-                    //
-                  }),
+                icon: isPlaying
+                    ? Icon(
+                        Icons.play_arrow,
+                        size: 28.0,
+                        color: Colors.pink[900],
+                      )
+                    : Icon(
+                        Icons.pause,
+                        size: 25.0,
+                        color: Colors.pink[900],
+                      ),
+                onPressed: () async {
+                  // if (iconTaped == 1) {
+                  //   advancedPlayer.play('$mp3');
+                  //   favouriteIcon = Icon(
+                  //     Icons.pause,
+                  //     color: Colors.pink[900],
+                  //   );
+                  //   iconTaped = 0;
+                  // } else {
+                  //   advancedPlayer.pause();
+                  //   favouriteIcon = Icon(
+                  //     Icons.play_arrow,
+                  //     color: Colors.pink[900],
+                  //   );
+                  //   iconTaped = 0;
+                  // }
+                  // setState(() {});
 
-              // IconButton(
-              //     onPressed: () => advancedPlayer.pause(),
-              //     icon: Icon(
-              //       Icons.pause,
-              //       size: 25.0,
-              //       color: Colors.pink[900],
-              //     )),
-              // IconButton(
-              //     onPressed: () {
-              //       advancedPlayer.stop();
-              //       //_position = Duration(minutes: 0, seconds: 0);
-              //     },
-              //     icon: Icon(
-              //       Icons.stop,
-              //       size: 25.0,
-              //       color: Colors.pink[900],
-              //     ))
+                  if (isPlaying) {
+                    await advancedPlayer.play('$mp3');
+                    isPlaying = false;
+                  } else if (!isPlaying) {
+                    await advancedPlayer.pause();
+                    isPlaying = true;
+                  }
+                  setState(() {});
+                },
+
+                // IconButton(
+                //     onPressed: () => advancedPlayer.pause(),
+                //     icon: Icon(
+                //       Icons.pause,
+                //       size: 25.0,
+                //       color: Colors.pink[900],
+                //     )),
+                // IconButton(
+                //     onPressed: () {
+                //       advancedPlayer.stop();
+                //       //_position = Duration(minutes: 0, seconds: 0);
+                //     },
+                //     icon: Icon(
+                //       Icons.stop,
+                //       size: 25.0,
+                //       color: Colors.pink[900],
+                //     ))
+              )
             ],
           ),
           slider(),
