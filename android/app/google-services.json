@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "1059733943339-mooj2i4cg1opkofjbaibrjvgdod1sce9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.aarti_sangraha",
+            "certificate_hash": "f8d519cf289d4028593f861be3d8ba89c17a9dbd"
+          }
+        },
+        {
           "client_id": "1059733943339-n38emtt2mc9ao9thge3d3u2vba64de25.apps.googleusercontent.com",
           "client_type": 3
         }

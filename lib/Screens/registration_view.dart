@@ -6,6 +6,7 @@ import 'package:progress_dialog/progress_dialog.dart';
 import 'package:aarti_sangraha/Model/databaseHelper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:aarti_sangraha/home_Page.dart';
 
 class registration_view extends StatefulWidget {
   registration_view({Key key}) : super(key: key);
@@ -121,6 +122,24 @@ class _registration_viewState extends State<registration_view> {
       fistNameController.clear();
       lastNameController.clear();
       emailController.clear();
+    }).catchError((onError) {
+      showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: Text("Please check your Internet Connection!!!"),
+              actions: [
+                FlatButton(
+                    onPressed: () {
+                      Navigator.of(context, rootNavigator: true).pop();
+                    },
+                    child: Text(
+                      "Close",
+                      style: TextStyle(color: Colors.blue),
+                    ))
+              ],
+            );
+          });
     });
   }
 
@@ -439,6 +458,27 @@ class _registration_viewState extends State<registration_view> {
                       //     });
                     }),
               ),
+
+              RaisedButton(
+                padding: EdgeInsets.only(top: 3.0, bottom: 3.0, left: 3.0),
+                color: const Color(0xFFFFFFFF),
+                child: new Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    new Container(
+                        padding: EdgeInsets.only(left: 10.0, right: 10.0),
+                        child: new Text(
+                          "Sign in with Google",
+                          style: TextStyle(
+                              color: Colors.grey, fontWeight: FontWeight.bold),
+                        )),
+                  ],
+                ),
+                onPressed: () {
+                  Navigator.pushReplacement(context,
+                      MaterialPageRoute(builder: (context) => home_Page()));
+                },
+              )
               // Padding(
               //   padding: EdgeInsets.only(top: 10.0),
               //   child: Text('$name' + '$lastName' + '$email'),
