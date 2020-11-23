@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:aarti_sangraha/Model/databaseHelper.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:aarti_sangraha/Screens/specificAarti_view.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 class home_view extends StatefulWidget {
   home_view({Key key}) : super(key: key);
@@ -21,6 +24,8 @@ class _home_viewState extends State<home_view> {
   var aartiSangId;
   final dbhelper = databaseHelper.instance;
   List AartiSangrahaId = new List();
+  GoogleSignIn _googleSignIn = GoogleSignIn();
+  var googleID;
 
   // startTime() async {
   //   var duration = new Duration(seconds: 6);
@@ -36,10 +41,22 @@ class _home_viewState extends State<home_view> {
   void initState() {
     // TODO: implement initState
     checkConnectivity();
+    googleSignOut();
+    getGoogleUid();
     super.initState();
     //getAartidSangrahaID();
     //insertData();
     //queryall();
+  }
+
+  googleSignOut() async {
+    _googleSignIn.signOut();
+  }
+
+  getGoogleUid() async {
+    SharedPreferences googleUid = await SharedPreferences.getInstance();
+    googleID = googleUid.getString('googleUid');
+    print("Google ID" + "$googleID");
   }
 
   Future<QuerySnapshot> getArtiSangraha() async {

@@ -63,6 +63,7 @@ flutter:
   # assets:
   assets:
     - lib/asset/logo/logo.png
+    - lib/asset/logo/Google_logo.png
     - lib/asset/images/ganesha.png
     - lib/asset/images/krishna.png
     - lib/asset/images/shiva.png 

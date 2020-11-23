@@ -7,7 +7,9 @@ import 'package:progress_dialog/progress_dialog.dart';
 import 'package:aarti_sangraha/Model/databaseHelper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:aarti_sangraha/home_Page.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class registration_view extends StatefulWidget {
   registration_view({Key key}) : super(key: key);
@@ -26,6 +28,12 @@ class _registration_viewState extends State<registration_view> {
   final TextEditingController emailController = new TextEditingController();
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  bool connectivityCheck;
+  GoogleSignIn _googleSignIn = GoogleSignIn();
+  FirebaseAuth _googleAuth;
+
+  bool isUserSignedIn = false;
 
   String name;
   String lastName;
@@ -46,6 +54,77 @@ class _registration_viewState extends State<registration_view> {
   final Shader linearGradient = LinearGradient(
     colors: <Color>[Colors.blue, Colors.purple],
   ).createShader(Rect.fromLTWH(0.0, 0.0, 200.0, 70.0));
+
+  @override
+  void initState() {
+    checkConnectivity();
+    super.initState();
+    newDate.subtract(Duration());
+    initApp();
+    //queryall();
+    // _signInWithEmailAndLink();
+    // _emailSignIn();
+    // sendSignInLinkToEmail("roshanw1998@gmail.com");
+  }
+
+  void initApp() async {
+    FirebaseApp defaultApp = await Firebase.initializeApp();
+    _googleAuth = FirebaseAuth.instanceFor(app: defaultApp);
+    checkIfUserIsSignedIn();
+  }
+
+  void checkIfUserIsSignedIn() async {
+    var userSignedIn = await _googleSignIn.isSignedIn();
+
+    setState(() {
+      isUserSignedIn = userSignedIn;
+    });
+  }
+
+  Future<User> _handleSignIn() async {
+    User user;
+    bool userSignedIn = await _googleSignIn.isSignedIn();
+
+    setState(() {
+      isUserSignedIn = userSignedIn;
+    });
+
+    if (isUserSignedIn) {
+      user = _googleAuth.currentUser;
+    } else {
+      final GoogleSignInAccount googleUser = await _googleSignIn.signIn();
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      user = (await _googleAuth.signInWithCredential(credential)).user;
+      userSignedIn = await _googleSignIn.isSignedIn();
+      setState(() {
+        isUserSignedIn = userSignedIn;
+      });
+    }
+
+    return user;
+  }
+
+  void onGoogleSignIn(BuildContext context) async {
+    User user = await _handleSignIn();
+    SharedPreferences googleUid = await SharedPreferences.getInstance();
+    googleUid.setString('googleUid', user.uid);
+    print(user.uid);
+    var userSignedIn = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => home_view()),
+    );
+
+    setState(() {
+      isUserSignedIn = userSignedIn == null ? true : false;
+    });
+  }
 
   void insertData() async {
     Map<String, dynamic> row = {
@@ -189,6 +268,40 @@ class _registration_viewState extends State<registration_view> {
     }
   }
 
+  skipAlert() async {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("Warning!!!"),
+            content:
+                Text("If you skipped you won't get your favourite list..."),
+            actions: [
+              FlatButton(
+                child: Text(
+                  "skip",
+                  style: TextStyle(color: Colors.black54),
+                ),
+                onPressed: () {
+                  Navigator.pushReplacement(context,
+                      MaterialPageRoute(builder: (context) => home_view()));
+                },
+              ),
+              FlatButton(
+                  color: Colors.blue,
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text(
+                    "Close",
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.w400),
+                  ))
+            ],
+          );
+        });
+  }
+
   // Widget registrationFailed(BuildContext context) {
   //   var alertDialog = AlertDialog(
   //     title: Text("Registration Failed."),
@@ -218,17 +331,6 @@ class _registration_viewState extends State<registration_view> {
   //     )
   //   );
   // }
-
-  @override
-  void initState() {
-    checkConnectivity();
-    super.initState();
-    newDate.subtract(Duration());
-    //queryall();
-    // _signInWithEmailAndLink();
-    // _emailSignIn();
-    // sendSignInLinkToEmail("roshanw1998@gmail.com");
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -470,9 +572,8 @@ class _registration_viewState extends State<registration_view> {
                       "Skip",
                       style: TextStyle(fontSize: 18.0, color: Colors.black54),
                     ),
-                    onPressed: () {
-                      Navigator.pushReplacement(context,
-                          MaterialPageRoute(builder: (context) => home_view()));
+                    onPressed: () async {
+                      skipAlert();
                       // showDialog(
                       //     context: context,
                       //     builder: (BuildContext context) {
@@ -491,16 +592,28 @@ class _registration_viewState extends State<registration_view> {
                   children: <Widget>[
                     new Container(
                         padding: EdgeInsets.only(left: 10.0, right: 10.0),
-                        child: new Text(
-                          "Sign in with Google",
-                          style: TextStyle(
-                              color: Colors.grey, fontWeight: FontWeight.bold),
+                        child: Row(
+                          children: [
+                            Image.asset(
+                              "lib/asset/logo/Google_logo.png",
+                              height: 30.0,
+                              width: 30.0,
+                            ),
+                            SizedBox(
+                              width: 10.0,
+                            ),
+                            Text(
+                              "Sign in with Google",
+                              style: TextStyle(
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ],
                         )),
                   ],
                 ),
                 onPressed: () {
-                  Navigator.pushReplacement(context,
-                      MaterialPageRoute(builder: (context) => home_Page()));
+                  onGoogleSignIn(context);
                 },
               )
               // Padding(
