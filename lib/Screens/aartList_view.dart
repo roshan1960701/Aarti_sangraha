@@ -2,6 +2,7 @@ import 'package:aarti_sangraha/Screens/specificAarti_view.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:connectivity/connectivity.dart';
 
 class aartiList_view extends StatefulWidget {
   var value;
@@ -29,6 +30,7 @@ class _aartiList_viewState extends State<aartiList_view> {
   @override
   void initState() {
     // TODO: implement initState
+    checkConnectivity();
     super.initState();
     //getArtiSangraha();
     //ganeshAarti();
@@ -72,6 +74,28 @@ class _aartiList_viewState extends State<aartiList_view> {
           builder: (BuildContext context) {
             return AlertDialog(
               title: Text("Check Your Internet Connection"),
+            );
+          });
+    }
+  }
+
+  checkConnectivity() async {
+    var result = await Connectivity().checkConnectivity();
+
+    if (result == ConnectivityResult.none) {
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text("No Internet Connection!!!"),
+              content: Text("Please connect Internet"),
+              actions: [
+                FlatButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text("Close"))
+              ],
             );
           });
     }
@@ -140,6 +164,7 @@ class _aartiList_viewState extends State<aartiList_view> {
                     } else {
                       this.cusSearchIcon = Icon(Icons.search);
                       this.cusAppBar = Text("");
+                      aartiName = null;
                     }
                   });
                 }),
@@ -148,16 +173,24 @@ class _aartiList_viewState extends State<aartiList_view> {
         ),
         body: StreamBuilder<QuerySnapshot>(
           stream: (aartiName != "" && aartiName != null)
-              ? Firestore.instance
+              ? FirebaseFirestore.instance
                   .collection('Aartis')
                   .orderBy("name_english")
                   .startAt([aartiName]).endAt(
                       [aartiName + "\uf88f"]).snapshots()
-              : Firestore.instance
+              : FirebaseFirestore.instance
                   .collection("Aartis")
                   .where("category", arrayContains: value)
                   .snapshots(),
           builder: (context, snapshot) {
+            if (snapshot.data.docs.length == 0) {
+              return Center(
+                child: Text(
+                  "Sorry Aarti Not Found",
+                  style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w700),
+                ),
+              );
+            }
             return (snapshot.connectionState == ConnectionState.waiting)
                 ? Center(child: CircularProgressIndicator())
                 : ListView.builder(

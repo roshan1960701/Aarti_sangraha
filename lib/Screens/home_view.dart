@@ -3,6 +3,8 @@ import 'package:aarti_sangraha/drawer.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:aarti_sangraha/Model/databaseHelper.dart';
+import 'package:connectivity/connectivity.dart';
+import 'package:aarti_sangraha/Screens/specificAarti_view.dart';
 
 class home_view extends StatefulWidget {
   home_view({Key key}) : super(key: key);
@@ -33,6 +35,7 @@ class _home_viewState extends State<home_view> {
   @override
   void initState() {
     // TODO: implement initState
+    checkConnectivity();
     super.initState();
     //getAartidSangrahaID();
     //insertData();
@@ -48,6 +51,28 @@ class _home_viewState extends State<home_view> {
           builder: (BuildContext context) {
             return AlertDialog(
               title: Text("Check Your Internet Connection"),
+            );
+          });
+    }
+  }
+
+  checkConnectivity() async {
+    var result = await Connectivity().checkConnectivity();
+
+    if (result == ConnectivityResult.none) {
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text("No Internet Connection!!!"),
+              content: Text("Please connect Internet"),
+              actions: [
+                FlatButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text("Close"))
+              ],
             );
           });
     }
@@ -96,7 +121,14 @@ class _home_viewState extends State<home_view> {
           actions: [
             Column(
               children: [
-                IconButton(icon: Icon(Icons.search), onPressed: () {})
+                IconButton(
+                    icon: Icon(Icons.search),
+                    onPressed: () {
+                      showSearch(
+                        context: context,
+                        delegate: aartiSearchDelegate(),
+                      );
+                    })
               ],
             )
           ],
@@ -171,7 +203,7 @@ class _home_viewState extends State<home_view> {
                                       ),
                                     ),
                                     // Text(snapshot.data.docs[index].id)
-                                  ], 
+                                  ],
                                 ),
                               ),
                               onTap: () async {
@@ -268,5 +300,133 @@ class _home_viewState extends State<home_view> {
         ),
       ),
     );
+  }
+}
+
+class aartiSearchDelegate extends SearchDelegate {
+  final firestoreInstance = FirebaseFirestore.instance;
+  BuildContext context;
+
+  Future<QuerySnapshot> getSearchAarti() async {
+    if (QuerySnapshot != null) {
+      firestoreInstance.collection('Aartis').snapshots();
+    } else {
+      return showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text("Check Your Internet Connection"),
+            );
+          });
+    }
+  }
+
+  @override
+  List<Widget> buildActions(BuildContext context) {
+    // TODO: implement buildActions
+    return [
+      IconButton(
+          icon: Icon(Icons.clear),
+          onPressed: () {
+            query = "";
+          })
+    ];
+  }
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    // TODO: implement buildLeading
+    return IconButton(
+      icon: AnimatedIcon(
+        icon: AnimatedIcons.menu_arrow,
+        progress: transitionAnimation,
+      ),
+      onPressed: () {
+        close(context, null);
+      },
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    // TODO: implement buildResults
+    return Center(
+      child: Container(
+          height: 100.0,
+          width: 100.0,
+          child: Card(
+            color: Colors.red,
+            child: Center(
+              child: Text(query),
+            ),
+          )),
+    );
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    // TODO: implement buildSuggestions
+
+    return StreamBuilder(
+        stream: (query != "" && query != null)
+            ? FirebaseFirestore.instance
+                .collection('Aartis')
+                .orderBy("name_english")
+                .startAt([query]).endAt([query + "\uf88f"]).snapshots()
+            : FirebaseFirestore.instance
+                .collection("FavouriteAartis")
+                .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.data.docs.length == 0) {
+            return Center(
+              child: Text(
+                "Sorry Aarti Not Found",
+                style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w700),
+              ),
+            );
+          }
+          return (snapshot.connectionState == ConnectionState.waiting)
+              ? Center(child: CircularProgressIndicator())
+              : ListView.builder(
+                  itemCount: snapshot.data.docs.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    return InkWell(
+                      child: Padding(
+                        padding: const EdgeInsets.all(10.0),
+                        child: Container(
+                            height: 60.0,
+                            decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                  Colors.blue[100],
+                                  Colors.green[100]
+                                ])),
+                            child: ListTile(
+                              leading: Image.network(
+                                snapshot.data.docs[index].data()["image"],
+                                fit: BoxFit.fill,
+                              ),
+                              title: Text(
+                                snapshot.data.docs[index]
+                                    .data()["name_marathi"],
+                                style: TextStyle(fontWeight: FontWeight.w700),
+                              ),
+                            )),
+                      ),
+                      onTap: () async {
+                        var docID = snapshot.data.docs[index].id;
+                        // print(docID);
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    specificAarti_view(id: docID)));
+                      },
+                    );
+                  });
+        });
+    throw UnimplementedError();
   }
 }

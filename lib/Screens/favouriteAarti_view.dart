@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:aarti_sangraha/Screens/specificAarti_view.dart';
+import 'package:connectivity/connectivity.dart';
 
 class favouriteAarti_view extends StatefulWidget {
   favouriteAarti_view({Key key}) : super(key: key);
@@ -22,8 +23,31 @@ class _favouriteAarti_viewState extends State<favouriteAarti_view> {
   @override
   void initState() {
     // TODO: implement initState
+    checkConnectivity();
     super.initState();
     // getFavouriteAartis();
+  }
+
+  checkConnectivity() async {
+    var result = await Connectivity().checkConnectivity();
+
+    if (result == ConnectivityResult.none) {
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text("No Internet Connection!!!"),
+              content: Text("Please connect Internet"),
+              actions: [
+                FlatButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text("Close"))
+              ],
+            );
+          });
+    }
   }
 
   getFavouriteAartis() async {
@@ -50,31 +74,30 @@ class _favouriteAarti_viewState extends State<favouriteAarti_view> {
                 icon: cusSearchIcon,
                 onPressed: () {
                   setState(() {
-                    setState(() {
-                      if (this.cusSearchIcon.icon == Icons.search) {
-                        this.cusSearchIcon = Icon(Icons.cancel);
-                        this.cusAppBar = TextField(
-                          textInputAction: TextInputAction.go,
-                          onChanged: (val) {
-                            setState(() {
-                              aartiName = val;
-                            });
-                          },
-                          decoration: InputDecoration(
-                              border: InputBorder.none,
-                              hintText: "Search Aarti",
-                              hintStyle: TextStyle(color: Colors.white54)),
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16.0,
-                          ),
-                          //onChanged: (query) => updateSearchQuery(query),
-                        );
-                      } else {
-                        this.cusSearchIcon = Icon(Icons.search);
-                        this.cusAppBar = Text("");
-                      }
-                    });
+                    if (this.cusSearchIcon.icon == Icons.search) {
+                      this.cusSearchIcon = Icon(Icons.cancel);
+                      this.cusAppBar = TextField(
+                        textInputAction: TextInputAction.go,
+                        onChanged: (val) {
+                          setState(() {
+                            aartiName = val;
+                          });
+                        },
+                        decoration: InputDecoration(
+                            border: InputBorder.none,
+                            hintText: "Search Aarti",
+                            hintStyle: TextStyle(color: Colors.white54)),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16.0,
+                        ),
+                        //onChanged: (query) => updateSearchQuery(query),
+                      );
+                    } else {
+                      this.cusSearchIcon = Icon(Icons.search);
+                      this.cusAppBar = Text("");
+                      aartiName = null;
+                    }
                   });
                 })
           ],
@@ -84,21 +107,32 @@ class _favouriteAarti_viewState extends State<favouriteAarti_view> {
           child: Scaffold(
             body: StreamBuilder<QuerySnapshot>(
               stream: (aartiName != "" && aartiName != null)
-                  ? Firestore.instance
+                  ? FirebaseFirestore.instance
                       .collection("FavouriteAartis")
                       .orderBy("name_english")
                       .startAt([aartiName]).endAt(
                           [aartiName + "\uf88f"]).snapshots()
-                  : Firestore.instance
+                  : FirebaseFirestore.instance
                       .collection("FavouriteAartis")
                       .snapshots(),
               builder: (context, snapshot) {
+                if (snapshot.data.docs.length == 0) {
+                  return Center(
+                    child: Text(
+                      "Sorry Aarti Not Found",
+                      style: TextStyle(
+                          fontSize: 20.0, fontWeight: FontWeight.w700),
+                    ),
+                  );
+                }
                 return (snapshot.connectionState == ConnectionState.waiting)
                     ? Center(child: CircularProgressIndicator())
                     : ListView.builder(
                         itemCount: snapshot.data.docs.length,
                         itemBuilder: (BuildContext context, int index) {
+                          // print(snapshot.data.docs.length);
                           DocumentSnapshot data = snapshot.data.docs[index];
+                          print(snapshot.data.docs);
                           return InkWell(
                             child: Padding(
                               padding: const EdgeInsets.all(10.0),

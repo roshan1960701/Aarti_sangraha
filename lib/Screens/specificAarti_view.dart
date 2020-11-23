@@ -5,6 +5,7 @@ import 'package:share/share.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:audioplayers/audio_cache.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:connectivity/connectivity.dart';
 
 class specificAarti_view extends StatefulWidget {
   var id;
@@ -25,6 +26,8 @@ class _specificAarti_viewState extends State<specificAarti_view> {
   String newMp3Time = "00:00";
   Duration _duration = new Duration();
   Duration _position = new Duration();
+  var currentTime = "00:00";
+  var _newTime;
   AudioPlayer advancedPlayer;
   AudioCache audioCache;
   String localFilePath;
@@ -46,6 +49,7 @@ class _specificAarti_viewState extends State<specificAarti_view> {
   void initState() {
     // TODO: implement initState
 
+    checkConnectivity();
     super.initState();
     getSpecificAarti();
     //getSpAart();
@@ -64,6 +68,28 @@ class _specificAarti_viewState extends State<specificAarti_view> {
       'aarti': aarti,
       'name_english': name_english,
     });
+  }
+
+  checkConnectivity() async {
+    var result = await Connectivity().checkConnectivity();
+
+    if (result == ConnectivityResult.none) {
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text("No Internet Connection!!!"),
+              content: Text("Please connect Internet"),
+              actions: [
+                FlatButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text("Close"))
+              ],
+            );
+          });
+    }
   }
 
   checkIsFavourite() async {
@@ -118,7 +144,16 @@ class _specificAarti_viewState extends State<specificAarti_view> {
 
     advancedPlayer.positionHandler = (p) => setState(() {
           _position = p;
+          //_currentTime = p;
         });
+    advancedPlayer.onAudioPositionChanged.listen((event) {
+      print("current position: $event");
+      setState(() {
+        _newTime =
+            '${event.inMinutes.remainder(60).toString().padLeft(2, '0')}:${event.inSeconds.remainder(60).toString().padLeft(2, '0')}';
+        currentTime = _newTime.toString();
+      });
+    });
   }
 
   Widget _tab(List<Widget> children) {
@@ -194,6 +229,7 @@ class _specificAarti_viewState extends State<specificAarti_view> {
                   // setState(() {});
 
                   if (isPlaying) {
+                    checkConnectivity();
                     await advancedPlayer.play('$mp3');
                     isPlaying = false;
                   } else if (!isPlaying) {
@@ -224,9 +260,12 @@ class _specificAarti_viewState extends State<specificAarti_view> {
             ],
           ),
           slider(),
-          Align(
-            alignment: Alignment.bottomRight,
-            child: Text("$newMp3Time"),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("$currentTime"),
+              Text("$newMp3Time"),
+            ],
           )
         ],
       ),

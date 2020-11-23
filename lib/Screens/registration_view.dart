@@ -1,4 +1,5 @@
 import 'package:aarti_sangraha/Screens/home_view.dart';
+import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -104,6 +105,28 @@ class _registration_viewState extends State<registration_view> {
             androidMinimumVersion: '1'));
   }
 
+  checkConnectivity() async {
+    var result = await Connectivity().checkConnectivity();
+
+    if (result == ConnectivityResult.none) {
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text("No Internet Connection!!!"),
+              content: Text("Please connect Internet"),
+              actions: [
+                FlatButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text("Close"))
+              ],
+            );
+          });
+    }
+  }
+
   Future<void> _resisterInFirestore() async {
     firestoreInstance.collection("Users").add({
       "First_name": fistNameController.text,
@@ -198,12 +221,13 @@ class _registration_viewState extends State<registration_view> {
 
   @override
   void initState() {
+    checkConnectivity();
     super.initState();
     newDate.subtract(Duration());
-    queryall();
-    _signInWithEmailAndLink();
-    _emailSignIn();
-    sendSignInLinkToEmail("roshanw1998@gmail.com");
+    //queryall();
+    // _signInWithEmailAndLink();
+    // _emailSignIn();
+    // sendSignInLinkToEmail("roshanw1998@gmail.com");
   }
 
   @override
