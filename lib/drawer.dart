@@ -4,14 +4,7 @@ import 'package:aarti_sangraha/Screens/favouriteAarti_view.dart';
 import 'package:aarti_sangraha/Screens/home_view.dart';
 import 'package:flutter/material.dart';
 
-class drawer extends StatefulWidget {
-  drawer({Key key}) : super(key: key);
-
-  @override
-  _drawerState createState() => _drawerState();
-}
-
-class _drawerState extends State<drawer> {
+class drawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -62,5 +55,6 @@ class _drawerState extends State<drawer> {
         ],
       ),
     );
+    ;
   }
 }

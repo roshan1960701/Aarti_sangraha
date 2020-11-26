@@ -2,7 +2,6 @@ import 'package:aarti_sangraha/Screens/home_view.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
 import 'package:email_validator/email_validator.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:progress_dialog/progress_dialog.dart';
 import 'package:aarti_sangraha/Model/databaseHelper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -20,33 +19,21 @@ class registration_view extends StatefulWidget {
 
 class _registration_viewState extends State<registration_view> {
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
-  final firestoreInstance = FirebaseFirestore.instance;
-  final dbhelper = databaseHelper.instance;
-  final dbRef = FirebaseDatabase.instance.reference().child("Users");
+  final fireStoreInstance = FirebaseFirestore.instance;
+  final dbHelper = databaseHelper.instance;
   final TextEditingController fistNameController = new TextEditingController();
   final TextEditingController lastNameController = new TextEditingController();
   final TextEditingController emailController = new TextEditingController();
-
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  bool connectivityCheck;
   GoogleSignIn _googleSignIn = GoogleSignIn();
   FirebaseAuth _googleAuth;
 
+  bool ignorePointer = false;
   bool isUserSignedIn = false;
-
-  String name;
-  String lastName;
-  String email;
-  String date;
-
-  ProgressDialog pr;
+  bool dateCheck = false;
+  ProgressDialog progressDialog;
   DateTime selectedDate = DateTime.now();
   String insertedDate = DateTime.now().toString();
   DateTime newDate = DateTime.now();
-  // DateTime fiftyDaysAgo = newDate.subtract(new Duration(days: 50));
-
-  //bool send = false;
 
   TextStyle btnStyle = new TextStyle(
       color: Colors.white, fontWeight: FontWeight.w500, fontSize: 20.0);
@@ -58,9 +45,8 @@ class _registration_viewState extends State<registration_view> {
   @override
   void initState() {
     checkConnectivity();
-    super.initState();
-    newDate.subtract(Duration());
     initApp();
+    super.initState();
     //queryall();
     // _signInWithEmailAndLink();
     // _emailSignIn();
@@ -112,18 +98,55 @@ class _registration_viewState extends State<registration_view> {
   }
 
   void onGoogleSignIn(BuildContext context) async {
-    User user = await _handleSignIn();
-    SharedPreferences googleUid = await SharedPreferences.getInstance();
-    googleUid.setString('googleUid', user.uid);
-    print(user.uid);
-    var userSignedIn = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => home_view()),
-    );
+    // SharedPreferences googleUid = await SharedPreferences.getInstance();
+    // googleUid.setString('userId', user.uid);
 
-    setState(() {
-      isUserSignedIn = userSignedIn == null ? true : false;
-    });
+    // DocumentReference documentReference =
+    //     fireStoreInstance.collection("Users").doc(user.uid);
+    // print(documentReference.id);
+
+    /*fireStoreInstance
+        .collection("Users")
+        .add({
+          "First_name": name[0],
+          "Last_name": name[1],
+          "email": user.email,
+          "DOB": " ",
+          "Inserted_date": insertedDate
+        })
+        .then((value) => {
+              Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (context) => home_view())),
+              _googleSignIn.signOut()
+            })
+        .catchError((onError) {
+          showDialog(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: Text("Please check your Internet Connection!!!"),
+                  actions: [
+                    FlatButton(
+                        onPressed: () {
+                          Navigator.of(context, rootNavigator: true).pop();
+                        },
+                        child: Text(
+                          "Close",
+                          style: TextStyle(color: Colors.blue),
+                        ))
+                  ],
+                );
+              });
+        });*/
+
+    // var userSignedIn = await Navigator.pushReplacement(
+    //   context,
+    //   MaterialPageRoute(builder: (context) => home_view()),
+    // );
+    //
+    // setState(() {
+    //   isUserSignedIn = userSignedIn == null ? true : false;
+    // });
   }
 
   void insertData() async {
@@ -134,11 +157,11 @@ class _registration_viewState extends State<registration_view> {
       databaseHelper.columnDOB: selectedDate.toString(),
       databaseHelper.columnInsertedDate: insertedDate,
     };
-    final id = await dbhelper.insert(row);
+    final id = await dbHelper.insert(row);
     print(id);
-    pr.show();
+    progressDialog.show();
     Future.delayed(Duration(seconds: 2)).then((value) {
-      pr.hide().whenComplete(() {
+      progressDialog.hide().whenComplete(() {
         Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => home_view()));
       });
@@ -148,40 +171,6 @@ class _registration_viewState extends State<registration_view> {
     //           Navigator.of(context).pushReplacement(
     //               MaterialPageRoute(
     //                   builder: (context) => home_view()));
-  }
-
-  Future<void> sendSignInLinkToEmail(String email,
-      [ActionCodeSettings actionCodeSettings]) {
-    try {
-      return _auth.sendSignInLinkToEmail(email: email);
-    } catch (e) {
-      print("This is Exception" + e);
-    }
-  }
-
-  Future<void> _signInWithEmailAndLink() async {
-    email = emailController.text;
-    return await _auth
-        .signInWithEmailLink(
-            email: "roshanw1998@gmail.com", emailLink: "roshanw1998@gmail.com")
-        .catchError(
-            (onError) => print('Error signing in with email link $onError'))
-        .then((value) {
-      var userEmail = value.user;
-      print(userEmail);
-      print("successfully signed in with email and password");
-    });
-  }
-
-  Future<void> _emailSignIn() async {
-    email = "roshanw1998@gmail.com";
-    return await _auth.sendSignInLinkToEmail(
-        email: email,
-        actionCodeSettings: ActionCodeSettings(
-            url: 'https://flutterauth.page.link/',
-            handleCodeInApp: true,
-            androidPackageName: 'com.example.aarti_sangraha',
-            androidMinimumVersion: '1'));
   }
 
   checkConnectivity() async {
@@ -206,47 +195,143 @@ class _registration_viewState extends State<registration_view> {
     }
   }
 
-  Future<void> _resisterInFirestore() async {
-    firestoreInstance.collection("Users").add({
-      "First_name": fistNameController.text,
-      "Last_name": lastNameController.text,
-      "email": emailController.text,
-      "DOB": selectedDate.toString(),
-      "Inserted_date": insertedDate
-    }).then((value) {
-      pr.show();
-      Future.delayed(Duration(seconds: 2)).then((value) {
-        pr.hide().whenComplete(() {
-          Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => home_view()));
-        });
+  registerUser(String fName, String lName, String email, String dob,
+      String insertedDate) async {
+    var userID;
+    fireStoreInstance
+        .collection("Users")
+        .where("email", isEqualTo: email)
+        .get()
+        .then((value) {
+      value.docs.forEach((element) async {
+        userID = element.id;
       });
-      fistNameController.clear();
-      lastNameController.clear();
-      emailController.clear();
-    }).catchError((onError) {
-      showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              title: Text("Please check your Internet Connection!!!"),
-              actions: [
-                FlatButton(
-                    onPressed: () {
-                      Navigator.of(context, rootNavigator: true).pop();
-                    },
-                    child: Text(
-                      "Close",
-                      style: TextStyle(color: Colors.blue),
-                    ))
-              ],
-            );
+      if (userID == null) {
+        progressDialog.show();
+        Future.delayed(Duration(seconds: 1)).then((value) async {
+          progressDialog.hide().whenComplete(() async {
+            Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => home_view()));
           });
+        });
+        fireStoreInstance.collection("Users").add({
+          "First_name": fName,
+          "Last_name": lName,
+          "email": email,
+          "DOB": dob,
+          "Inserted_date": insertedDate
+        }).then((value) async {
+          userID = value.id;
+          SharedPreferences googleUid = await SharedPreferences.getInstance();
+          googleUid.setString('userId', userID);
+        }).catchError((onError) async {
+          showDialog(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: Text("Please check your Internet Connection!!!"),
+                  actions: [
+                    FlatButton(
+                        onPressed: () async {
+                          Navigator.of(context, rootNavigator: true).pop();
+                        },
+                        child: Text(
+                          "Close",
+                          style: TextStyle(color: Colors.blue),
+                        ))
+                  ],
+                );
+              });
+        });
+      } else {
+        progressDialog.show();
+        Future.delayed(Duration(seconds: 1)).then((value) async {
+          progressDialog.hide().whenComplete(() async {
+            SharedPreferences googleUid = await SharedPreferences.getInstance();
+            googleUid.setString('userId', userID);
+            Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => home_view()));
+          });
+        });
+      }
     });
   }
 
+  Future<void> registerInFireStore() async {
+    var userID;
+    var userDocId;
+    String email;
+    fireStoreInstance
+        .collection("Users")
+        .where("email", isEqualTo: emailController.text)
+        .get()
+        .then((value) async => {
+              value.docs.forEach((element) {
+                // print(element.data());
+                email = element.data()["email"];
+                userDocId = element.id;
+              }),
+              if (emailController.text == email)
+                {
+                  progressDialog.show(),
+                  Future.delayed(Duration(seconds: 2)).then((value) {
+                    progressDialog.hide().whenComplete(() async {
+                      userID = userDocId;
+                      SharedPreferences googleUid =
+                          await SharedPreferences.getInstance();
+                      googleUid.setString('userId', userID);
+                      Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(builder: (context) => home_view()));
+                    });
+                  }),
+                }
+              else
+                {
+                  progressDialog.show(),
+                  Future.delayed(Duration(seconds: 2)).then((value) {
+                    progressDialog.hide().whenComplete(() async {
+                      Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(builder: (context) => home_view()));
+                    });
+                  }),
+                  fireStoreInstance.collection("Users").add({
+                    "First_name": fistNameController.text,
+                    "Last_name": lastNameController.text,
+                    "email": emailController.text,
+                    "DOB": selectedDate.toString(),
+                    "Inserted_date": insertedDate
+                  }).then((value) async {
+                    userID = value.id;
+                    SharedPreferences googleUid =
+                        await SharedPreferences.getInstance();
+                    googleUid.setString('userId', userID);
+                  }).catchError((onError) {
+                    showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: Text(
+                                "Please check your Internet Connection!!!"),
+                            actions: [
+                              FlatButton(
+                                  onPressed: () {
+                                    Navigator.of(context, rootNavigator: true)
+                                        .pop();
+                                  },
+                                  child: Text(
+                                    "Close",
+                                    style: TextStyle(color: Colors.blue),
+                                  ))
+                            ],
+                          );
+                        });
+                  }),
+                }
+            });
+  }
+
   void queryall() async {
-    var allrows = await dbhelper.queryall();
+    var allrows = await dbHelper.queryall();
     allrows.forEach((row) {
       print(row);
     });
@@ -263,7 +348,6 @@ class _registration_viewState extends State<registration_view> {
     if (picked != null && picked != selectedDate) {
       setState(() {
         selectedDate = picked;
-        print(selectedDate);
       });
     }
   }
@@ -282,7 +366,10 @@ class _registration_viewState extends State<registration_view> {
                   "skip",
                   style: TextStyle(color: Colors.black54),
                 ),
-                onPressed: () {
+                onPressed: () async {
+                  SharedPreferences googleUid =
+                      await SharedPreferences.getInstance();
+                  googleUid.setString('userId', "SKIPID0012345");
                   Navigator.pushReplacement(context,
                       MaterialPageRoute(builder: (context) => home_view()));
                 },
@@ -302,39 +389,9 @@ class _registration_viewState extends State<registration_view> {
         });
   }
 
-  // Widget registrationFailed(BuildContext context) {
-  //   var alertDialog = AlertDialog(
-  //     title: Text("Registration Failed."),
-  //     content: Text("Please check your Internet Connection!!"),
-  //     actions: [
-  //       Align(
-  //         alignment: Alignment.bottomCenter,
-  //         child: FlatButton(
-  //             onPressed: () {
-  //               Navigator.pop(context);
-  //             },
-  //             child: Text("Close")),
-  //       )
-  //     ],
-  //   );
-  //   showDialog(
-  //       context: context,
-  //       builder: (BuildContext context) {
-  //         return alertDialog;
-  //       });
-  // }
-
-  // Widget loader(){
-  //   return loader(
-  //     Loading(
-  //       indicator: BallPulseIndicator(),size: 100.0,
-  //     )
-  //   );
-  // }
-
   @override
   Widget build(BuildContext context) {
-    pr = ProgressDialog(
+    progressDialog = ProgressDialog(
       context,
       type: ProgressDialogType.Normal,
       isDismissible: true,
@@ -344,7 +401,7 @@ class _registration_viewState extends State<registration_view> {
 //      ),
     );
 
-    pr.style(
+    progressDialog.style(
 //      message: 'Downloading file...',
       message: 'Please Wait!!!',
       borderRadius: 10.0,
@@ -360,267 +417,306 @@ class _registration_viewState extends State<registration_view> {
           color: Colors.black, fontSize: 19.0, fontWeight: FontWeight.w600),
     );
 
-    return Scaffold(
-      resizeToAvoidBottomPadding: false,
-      body: Form(
-        key: formKey,
-        child: Padding(
-          padding: const EdgeInsets.only(
-            top: 60.0,
-            left: 40.0,
-            right: 40.0,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Padding(
-                padding: EdgeInsets.only(top: 10.0, bottom: 5.0),
-                child: Text(
-                  "Register",
-                  style: TextStyle(
-                      foreground: Paint()..shader = linearGradient,
-                      fontSize: 30.0,
-                      fontFamily: 'Montserrat',
-                      fontWeight: FontWeight.w800),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(5.0),
-                child: TextFormField(
-                  controller: fistNameController,
-                  validator: (value) {
-                    if (value.isEmpty) {
-                      return "Please enter First Name";
-                    }
-                    return null;
-                  },
-                  decoration: InputDecoration(
-                    hintText: "First Name",
-                    border: InputBorder.none,
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                      borderSide: BorderSide(color: Color(0x73000000)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                      borderSide: BorderSide(color: Color(0xFF00BCD4)),
-                    ),
-                  ),
-                  maxLength: 15,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(5.0),
-                child: TextFormField(
-                  controller: lastNameController,
-                  validator: (value) {
-                    if (value.isEmpty) {
-                      return "Please enter Last Name";
-                    }
-                    return null;
-                  },
-                  decoration: InputDecoration(
-                    hintText: "Last Name",
-                    border: InputBorder.none,
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                      borderSide: BorderSide(color: Color(0x73000000)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                      borderSide: BorderSide(color: Color(0xFF00BCD4)),
-                    ),
-                  ),
-                  maxLength: 15,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(5.0),
-                child: TextFormField(
-                  validator: (value) {
-                    if (value.isEmpty) {
-                      return "PLease enter email";
-                    }
-                    if (!EmailValidator.validate(value)) {
-                      return "Please enter valid email";
-                    }
-                    return null;
-                  },
-                  controller: emailController,
-                  decoration: InputDecoration(
-                    hintText: "Email Id",
-                    border: InputBorder.none,
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                      borderSide: BorderSide(color: Color(0x73000000)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                      borderSide: BorderSide(color: Color(0xFF00BCD4)),
-                    ),
-                  ),
-                  maxLength: 30,
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.all(5.0),
-                child: Container(
-                    margin: EdgeInsets.only(left: 50.0, right: 50.0),
-                    decoration: BoxDecoration(
-                        border: Border.all(color: Colors.blueAccent)),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: <Widget>[
-                        Text(
-                          "DOB: ",
-                          style: TextStyle(color: Colors.black45),
-                        ),
-                        Text(
-                          "${selectedDate.toLocal()}".split(' ')[0],
-                          style: TextStyle(fontSize: 18.0, color: Colors.blue),
-                        ),
-                        IconButton(
-                            tooltip: 'Tap to select Date',
-                            icon: Icon(
-                              Icons.calendar_today,
-                              color: Colors.blue,
-                            ),
-                            onPressed: () {
-                              _selectDate(context);
-                            })
-                      ],
-                    )),
-              ),
-              Padding(
+    return WillPopScope(
+      child: SafeArea(
+        child: Scaffold(
+          resizeToAvoidBottomPadding: false,
+          body: IgnorePointer(
+            ignoring: false,
+            // ignoring: ignorePointer,
+            child: Form(
+              key: formKey,
+              child: Padding(
                 padding: const EdgeInsets.only(
-                  top: 10.0,
+                  top: 60.0,
+                  left: 40.0,
+                  right: 40.0,
                 ),
-                child: MaterialButton(
-                    elevation: 10.0,
-                    minWidth: 140.0,
-                    height: 40.0,
-                    splashColor: Colors.white,
-                    color: Colors.blue,
-                    child: Text(
-                      "Submit",
-                      style: btnStyle,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(top: 10.0, bottom: 5.0),
+                      child: Text(
+                        "Register",
+                        style: TextStyle(
+                            foreground: Paint()..shader = linearGradient,
+                            fontSize: 30.0,
+                            fontFamily: 'Montserrat',
+                            fontWeight: FontWeight.w800),
+                      ),
                     ),
-                    onPressed: () async {
-                      try {
-                        if (formKey.currentState.validate()) {
-                          _resisterInFirestore();
-                        }
-                      } catch (Exception) {
-                        showDialog(
-                            context: context,
-                            builder: (context) {
-                              return AlertDialog(
-                                title: Text(
-                                    "Please check your Internet Connection!!!"),
-                              );
-                            });
-                      }
-
-                      // try {
-                      //   if (formKey.currentState.validate()) {
-                      //     // send = true;
-                      //     dbRef.push().set({
-                      //       "First Name": fistNameController.text,
-                      //       "Last Name": lastNameController.text,
-                      //       "DOB": selectedDate.toString(),
-                      //       "Email": emailController.text,
-                      //     }).then((_) {
-                      //       print("Data Added");
-                      //       pr.show();
-                      //       Future.delayed(Duration(seconds: 4)).then((value) {
-                      //         pr.hide().whenComplete(() {
-                      //           Navigator.of(context).pushReplacement(
-                      //               MaterialPageRoute(
-                      //                   builder: (context) => home_view()));
-                      //         });
-                      //       });
-                      //       fistNameController.clear();
-                      //       lastNameController.clear();
-                      //       emailController.clear();
-                      //     }).catchError((onError) {
-                      //       print(onError);
-                      //       showDialog(
-                      //           context: context,
-                      //           builder: (context) {
-                      //             return AlertDialog(
-                      //               title: Text("Registration Failed"),
-                      //             );
-                      //           });
-                      //     });
-                      //   }
-                      // } catch (Exception) {
-                      //   showDialog(
-                      //       context: context,
-                      //       builder: (BuildContext context) {
-                      //         return AlertDialog(
-                      //           title: Text("Registration Failed"),
-                      //         );
-                      //       });
-                      // }
-                    }),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 5.0),
-                child: FlatButton(
-                    splashColor: Colors.transparent,
-                    child: Text(
-                      "Skip",
-                      style: TextStyle(fontSize: 18.0, color: Colors.black54),
+                    Padding(
+                      padding: const EdgeInsets.all(5.0),
+                      child: TextFormField(
+                        controller: fistNameController,
+                        validator: (value) {
+                          if (value.isEmpty) {
+                            return "Please enter First Name";
+                          }
+                          return null;
+                        },
+                        decoration: InputDecoration(
+                          hintText: "First Name",
+                          border: InputBorder.none,
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(5.0)),
+                            borderSide: BorderSide(color: Color(0x73000000)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(5.0)),
+                            borderSide: BorderSide(color: Color(0xFF00BCD4)),
+                          ),
+                        ),
+                        maxLength: 15,
+                      ),
                     ),
-                    onPressed: () async {
-                      skipAlert();
-                      // showDialog(
-                      //     context: context,
-                      //     builder: (BuildContext context) {
-                      //       return AlertDialog(
-                      //         title: Text("Warninig"),
-                      //       );
-                      //     });
-                    }),
-              ),
-
-              RaisedButton(
-                padding: EdgeInsets.only(top: 3.0, bottom: 3.0, left: 3.0),
-                color: const Color(0xFFFFFFFF),
-                child: new Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    new Container(
-                        padding: EdgeInsets.only(left: 10.0, right: 10.0),
-                        child: Row(
-                          children: [
-                            Image.asset(
-                              "lib/asset/logo/Google_logo.png",
-                              height: 30.0,
-                              width: 30.0,
-                            ),
-                            SizedBox(
-                              width: 10.0,
-                            ),
-                            Text(
-                              "Sign in with Google",
-                              style: TextStyle(
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        )),
+                    Padding(
+                      padding: const EdgeInsets.all(5.0),
+                      child: TextFormField(
+                        controller: lastNameController,
+                        validator: (value) {
+                          if (value.isEmpty) {
+                            return "Please enter Last Name";
+                          }
+                          return null;
+                        },
+                        decoration: InputDecoration(
+                          hintText: "Last Name",
+                          border: InputBorder.none,
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(5.0)),
+                            borderSide: BorderSide(color: Color(0x73000000)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(5.0)),
+                            borderSide: BorderSide(color: Color(0xFF00BCD4)),
+                          ),
+                        ),
+                        maxLength: 15,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(5.0),
+                      child: TextFormField(
+                        validator: (value) {
+                          if (value.isEmpty) {
+                            return "PLease enter email";
+                          }
+                          if (!EmailValidator.validate(value)) {
+                            return "Please enter valid email";
+                          }
+                          return null;
+                        },
+                        controller: emailController,
+                        decoration: InputDecoration(
+                          hintText: "Email Id",
+                          border: InputBorder.none,
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(5.0)),
+                            borderSide: BorderSide(color: Color(0x73000000)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(5.0)),
+                            borderSide: BorderSide(color: Color(0xFF00BCD4)),
+                          ),
+                        ),
+                        maxLength: 30,
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.all(5.0),
+                      child: Container(
+                          margin: EdgeInsets.only(left: 50.0, right: 50.0),
+                          decoration: BoxDecoration(
+                              border: Border.all(color: Colors.blueAccent)),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: <Widget>[
+                              Text(
+                                "DOB: ",
+                                style: TextStyle(color: Colors.black45),
+                              ),
+                              Text(
+                                "${selectedDate.toLocal()}".split(' ')[0],
+                                style: TextStyle(
+                                    fontSize: 18.0, color: Colors.blue),
+                              ),
+                              IconButton(
+                                  tooltip: 'Tap to select Date',
+                                  icon: Icon(
+                                    Icons.calendar_today,
+                                    color: Colors.blue,
+                                  ),
+                                  onPressed: () {
+                                    _selectDate(context);
+                                  })
+                            ],
+                          )),
+                    ),
+                    Text(
+                      dateCheck ? "Age must be greater that 5 years " : " ",
+                      style: TextStyle(color: Colors.red),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        top: 10.0,
+                      ),
+                      child: MaterialButton(
+                          elevation: 10.0,
+                          minWidth: 140.0,
+                          height: 40.0,
+                          splashColor: Colors.white,
+                          color: Colors.blue,
+                          child: Text(
+                            "Submit",
+                            style: btnStyle,
+                          ),
+                          onPressed: () async {
+                            try {
+                              if (formKey.currentState.validate()) {
+                                if (newDate.year.toInt() -
+                                        selectedDate.year.toInt() >=
+                                    5) {
+                                  setState(() {
+                                    dateCheck = false;
+                                    //   ignorePointer = true;
+                                  });
+                                  //registerInFireStore();
+                                  registerUser(
+                                      fistNameController.text,
+                                      lastNameController.text,
+                                      emailController.text,
+                                      selectedDate.toString(),
+                                      insertedDate);
+                                } else {
+                                  setState(() {
+                                    dateCheck = true;
+                                  });
+                                }
+                              }
+                            } catch (Exception) {
+                              showDialog(
+                                  context: context,
+                                  builder: (context) {
+                                    return AlertDialog(
+                                      title: Text(
+                                          "Please check your Internet Connection!!!"),
+                                    );
+                                  });
+                            }
+                            // try {
+                            //   if (formKey.currentState.validate()) {
+                            //     // send = true;
+                            //     dbRef.push().set({
+                            //       "First Name": fistNameController.text,
+                            //       "Last Name": lastNameController.text,
+                            //       "DOB": selectedDate.toString(),
+                            //       "Email": emailController.text,
+                            //     }).then((_) {
+                            //       print("Data Added");
+                            //       pr.show();
+                            //       Future.delayed(Duration(seconds: 4)).then((value) {
+                            //         pr.hide().whenComplete(() {
+                            //           Navigator.of(context).pushReplacement(
+                            //               MaterialPageRoute(
+                            //                   builder: (context) => home_view()));
+                            //         });
+                            //       });
+                            //       fistNameController.clear();
+                            //       lastNameController.clear();
+                            //       emailController.clear();
+                            //     }).catchError((onError) {
+                            //       print(onError);
+                            //       showDialog(
+                            //           context: context,
+                            //           builder: (context) {
+                            //             return AlertDialog(
+                            //               title: Text("Registration Failed"),
+                            //             );
+                            //           });
+                            //     });
+                            //   }
+                            // } catch (Exception) {
+                            //   showDialog(
+                            //       context: context,
+                            //       builder: (BuildContext context) {
+                            //         return AlertDialog(
+                            //           title: Text("Registration Failed"),
+                            //         );
+                            //       });
+                            // }
+                          }),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 5.0),
+                      child: FlatButton(
+                          splashColor: Colors.transparent,
+                          child: Text(
+                            "Skip",
+                            style: TextStyle(
+                                fontSize: 18.0, color: Colors.black54),
+                          ),
+                          onPressed: () async {
+                            skipAlert();
+                          }),
+                    ),
+                    RaisedButton(
+                      padding:
+                          EdgeInsets.only(top: 3.0, bottom: 3.0, left: 3.0),
+                      color: const Color(0xFFFFFFFF),
+                      child: new Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          new Container(
+                              padding: EdgeInsets.only(left: 10.0, right: 10.0),
+                              child: Row(
+                                children: [
+                                  Image.asset(
+                                    "lib/asset/logo/Google_logo.png",
+                                    height: 30.0,
+                                    width: 30.0,
+                                  ),
+                                  SizedBox(
+                                    width: 10.0,
+                                  ),
+                                  Text(
+                                    "Sign in with Google",
+                                    style: TextStyle(
+                                        color: Colors.grey,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              )),
+                        ],
+                      ),
+                      onPressed: () async {
+                        setState(() {
+                          ignorePointer = true;
+                        });
+                        // Navigator.push(
+                        //     context,
+                        //     MaterialPageRoute(
+                        //         builder: (context) => home_Page()));
+                        User user = await _handleSignIn();
+                        var name = new List();
+                        name = user.displayName.split(" ");
+                        registerUser(
+                            name[0], name[1], user.email, " ", insertedDate);
+                        _googleSignIn.signOut();
+                        // onGoogleSignIn(context);
+                      },
+                    )
                   ],
                 ),
-                onPressed: () {
-                  onGoogleSignIn(context);
-                },
-              )
-              // Padding(
-              //   padding: EdgeInsets.only(top: 10.0),
-              //   child: Text('$name' + '$lastName' + '$email'),
-              // )
-            ],
+              ),
+            ),
           ),
         ),
       ),

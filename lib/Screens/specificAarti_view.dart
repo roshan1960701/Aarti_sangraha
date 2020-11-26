@@ -19,9 +19,8 @@ class _specificAarti_viewState extends State<specificAarti_view> {
   var id;
 
   bool isPlaying;
-
   _specificAarti_viewState(this.id);
-  final firestoreInstance = FirebaseFirestore.instance;
+  final fireStoreInstance = FirebaseFirestore.instance;
   var mp3Time;
   String newMp3Time = "00:00";
   Duration _duration = new Duration();
@@ -31,10 +30,8 @@ class _specificAarti_viewState extends State<specificAarti_view> {
   AudioPlayer advancedPlayer;
   AudioCache audioCache;
   String localFilePath;
-
   String aarti = " ", image, mp3, name_marathi = " ", name_english;
 
-  var checkFavourite;
   bool isFavourite = false;
   Icon favouriteIcon = Icon(
     Icons.play_arrow,
@@ -42,8 +39,7 @@ class _specificAarti_viewState extends State<specificAarti_view> {
   );
   int iconTaped = 0;
 
-  List<String> aartis = new List<String>();
-  List<String> savedAartis = List<String>();
+  List aartis = new List();
 
   @override
   void initState() {
@@ -53,21 +49,39 @@ class _specificAarti_viewState extends State<specificAarti_view> {
     super.initState();
     getSpecificAarti();
     //getSpAart();
+    // print(utilities.FavouriteAartis);
     initPlayer();
     checkIsFavourite();
-    // get();
   }
 
   addToFavouriteFirestore() async {
-    DocumentReference documentReference =
-        firestoreInstance.collection("FavouriteAartis").doc(id);
-    documentReference.set({
-      'name_marathi': name_marathi,
-      'image': image,
-      'mp3': mp3,
-      'aarti': aarti,
-      'name_english': name_english,
-    });
+    SharedPreferences googleUid = await SharedPreferences.getInstance();
+    var userId = googleUid.getString('userId');
+
+    // DocumentReference documentReference =
+    //     firestoreInstance.collection("FavouriteAartis").doc(id);
+
+    if (userId == "SKIPID0012345") {
+      SharedPreferences sharedPreferences =
+          await SharedPreferences.getInstance();
+      var aarti = sharedPreferences.getStringList("Fav");
+      print(aarti);
+      aarti.add(id);
+      sharedPreferences.setStringList("Fav", aarti);
+    } else {
+      fireStoreInstance
+          .collection("FavouriteAartis")
+          .doc(userId)
+          .collection("FavouriteAartis")
+          .doc(id)
+          .set({
+        'name_marathi': name_marathi,
+        'image': image,
+        'mp3': mp3,
+        'aarti': aarti,
+        'name_english': name_english,
+      });
+    }
   }
 
   checkConnectivity() async {
@@ -93,25 +107,72 @@ class _specificAarti_viewState extends State<specificAarti_view> {
   }
 
   checkIsFavourite() async {
-    checkFavourite = id;
-    // print(checkFavourite);
-    firestoreInstance.collection("FavouriteAartis").get().then((querySnapshot) {
-      querySnapshot.docs.forEach((result) {
-        //   print(result.id);
+    SharedPreferences googleUid = await SharedPreferences.getInstance();
+    var userId = googleUid.getString('userId');
 
-        if (id == result.id) {
+    if (userId == "SKIPID0012345") {
+      SharedPreferences sharedPreferences =
+          await SharedPreferences.getInstance();
+      var aarti = sharedPreferences.getStringList("Fav");
+      bool check;
+      if (aarti.length == 0) {
+        print("Nothing");
+      } else {
+        for (int i = 0; i < aarti.length; i++) {
+          if (aarti.contains(id)) {
+            check = true;
+          }
+        }
+        if (check) {
           setState(() {
             isFavourite = true;
-            // print(isFavourite);
           });
         }
-        //print(result.data());
+      }
+    } else {
+      FirebaseFirestore.instance
+          .collection("FavouriteAartis")
+          .doc(userId)
+          .collection("FavouriteAartis")
+          .get()
+          .then((querySnapshot) {
+        querySnapshot.docs.forEach((result) {
+          if (id == result.id) {
+            setState(() {
+              isFavourite = true;
+            });
+          }
+        });
       });
-    });
+    }
   }
 
   removeFromFavouriteFirestore() async {
-    await firestoreInstance.collection("FavouriteAartis").doc(id).delete();
+    SharedPreferences googleUid = await SharedPreferences.getInstance();
+    var userId = googleUid.getString('userId');
+
+    if (userId == "SKIPID0012345") {
+      SharedPreferences sharedPreferences =
+          await SharedPreferences.getInstance();
+      var aarti = sharedPreferences.getStringList("Fav");
+      print(aarti);
+      // print(aarti);
+      // aarti.add(id);
+      // sharedPreferences.setStringList("Fav", aarti);
+
+      if (aarti.contains(id)) {
+        aarti.remove(id);
+        print(aarti);
+        sharedPreferences.setStringList("Fav", aarti);
+      }
+    } else {
+      await fireStoreInstance
+          .collection("FavouriteAartis")
+          .doc(userId)
+          .collection("FavouriteAartis")
+          .doc(id)
+          .delete();
+    }
   }
 
   addToFavouriteAarti() async {
@@ -147,7 +208,7 @@ class _specificAarti_viewState extends State<specificAarti_view> {
           //_currentTime = p;
         });
     advancedPlayer.onAudioPositionChanged.listen((event) {
-      print("current position: $event");
+      //  print("current position: $event");
       setState(() {
         _newTime =
             '${event.inMinutes.remainder(60).toString().padLeft(2, '0')}:${event.inSeconds.remainder(60).toString().padLeft(2, '0')}';
@@ -172,22 +233,6 @@ class _specificAarti_viewState extends State<specificAarti_view> {
     );
   }
 
-  // Widget _btn(String icon, VoidCallback onPressed) {
-  //   return ButtonTheme(
-  //     minWidth: 48.0,
-  //     child: Container(
-  //       width: 150,
-  //       height: 45,
-  //       child: IconButton(
-  //           icon: icon,
-  //           child: Text(txt),
-  //           color: Colors.pink[900],
-  //           textColor: Colors.white,
-  //           onPressed: onPressed),
-  //     ),
-  //   );
-  // }
-
   Widget LocalAudio() {
     return _tab([
       Column(
@@ -211,23 +256,6 @@ class _specificAarti_viewState extends State<specificAarti_view> {
                         color: Colors.pink[900],
                       ),
                 onPressed: () async {
-                  // if (iconTaped == 1) {
-                  //   advancedPlayer.play('$mp3');
-                  //   favouriteIcon = Icon(
-                  //     Icons.pause,
-                  //     color: Colors.pink[900],
-                  //   );
-                  //   iconTaped = 0;
-                  // } else {
-                  //   advancedPlayer.pause();
-                  //   favouriteIcon = Icon(
-                  //     Icons.play_arrow,
-                  //     color: Colors.pink[900],
-                  //   );
-                  //   iconTaped = 0;
-                  // }
-                  // setState(() {});
-
                   if (isPlaying) {
                     checkConnectivity();
                     await advancedPlayer.play('$mp3');
@@ -238,7 +266,6 @@ class _specificAarti_viewState extends State<specificAarti_view> {
                   }
                   setState(() {});
                 },
-
                 // IconButton(
                 //     onPressed: () => advancedPlayer.pause(),
                 //     icon: Icon(
@@ -298,7 +325,7 @@ class _specificAarti_viewState extends State<specificAarti_view> {
 
   Future<QuerySnapshot> getImages() async {
     // DocumentReference docRef = firestoreInstance.collection("Aartis").get();
-    firestoreInstance.collection("Aartis").doc(id).get().then((value) => {});
+    fireStoreInstance.collection("Aartis").doc(id).get().then((value) => {});
     // var result = firestoreInstance.collection("Aartis").doc(id).get();
     // if (result != null) {
     //   print(result);
@@ -307,7 +334,7 @@ class _specificAarti_viewState extends State<specificAarti_view> {
 
   Future<QuerySnapshot> getSpecificAarti() async {
     if (QuerySnapshot != null) {
-      firestoreInstance.collection("Aartis").doc(id).get().then((value) {
+      fireStoreInstance.collection("Aartis").doc(id).get().then((value) {
         if (value.id.length > 0) {
           setState(() {
             name_marathi = value["name_marathi"];
@@ -316,13 +343,6 @@ class _specificAarti_viewState extends State<specificAarti_view> {
             mp3 = value["mp3"];
             name_english = value["name_english"];
           });
-
-          // print(name_marathi);
-          // print(aarti);
-          // print(image);
-          // print(mp3);
-          // var data= value.id;
-          // print(data);
         }
       });
     }
@@ -424,19 +444,6 @@ class _specificAarti_viewState extends State<specificAarti_view> {
                             isFavourite = true;
                           }
                           setState(() {});
-                          // setState(() {
-                          //   if (iconTaped == 0) {
-                          //     addToFavouriteFirestore();
-                          //     favouriteIcon = Icon(
-                          //       Icons.favorite,
-                          //       color: Colors.red,
-                          //     );
-                          //     iconTaped = 1;
-                          //   } else {
-                          //     favouriteIcon = Icon(Icons.favorite_border);
-                          //     iconTaped = 0;
-                          //   }
-                          // }
                         },
                       )
                     ],

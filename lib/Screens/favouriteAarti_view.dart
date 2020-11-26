@@ -13,8 +13,13 @@ class favouriteAarti_view extends StatefulWidget {
 }
 
 class _favouriteAarti_viewState extends State<favouriteAarti_view> {
-  var title, img, aartiName;
+  var aartiName;
   var id;
+  final fireStoreInstance = FirebaseFirestore.instance;
+  var favAartis;
+  List aartiList = new List();
+
+  var userId;
   Icon cusSearchIcon = Icon(
     Icons.search,
     color: Colors.white,
@@ -23,9 +28,39 @@ class _favouriteAarti_viewState extends State<favouriteAarti_view> {
   @override
   void initState() {
     // TODO: implement initState
+    //getFavList();
+    checkUser();
     checkConnectivity();
     super.initState();
     // getFavouriteAartis();
+  }
+
+  Future<String> getSpecificUserId() async {
+    SharedPreferences googleUid = await SharedPreferences.getInstance();
+    userId = googleUid.getString('userId');
+    // print(userId);
+    return userId;
+  }
+
+  checkUser() async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    favAartis = sharedPreferences.getStringList("Fav");
+
+    fireStoreInstance
+        .collection("Aartis")
+        .where(FieldPath.documentId, whereIn: favAartis.toList())
+        .get()
+        .then((value) {
+      value.docs.forEach((element) {
+        aartiList.add(element.data()['name_english']);
+        print(aartiList);
+      });
+    });
+  }
+
+  Future getFavList() async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    var favAartis = sharedPreferences.getStringList("Fav");
   }
 
   checkConnectivity() async {
@@ -48,15 +83,6 @@ class _favouriteAarti_viewState extends State<favouriteAarti_view> {
             );
           });
     }
-  }
-
-  getFavouriteAartis() async {
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    //Return String
-    String name_marathi = sharedPreferences.getString('name_marathi');
-    String image = sharedPreferences.getString('image');
-    print(name_marathi);
-    print(image);
   }
 
   @override
@@ -104,74 +130,173 @@ class _favouriteAarti_viewState extends State<favouriteAarti_view> {
           title: cusAppBar,
         ),
         body: WillPopScope(
-          child: Scaffold(
-            body: StreamBuilder<QuerySnapshot>(
-              stream: (aartiName != "" && aartiName != null)
-                  ? FirebaseFirestore.instance
-                      .collection("FavouriteAartis")
-                      .orderBy("name_english")
-                      .startAt([aartiName]).endAt(
-                          [aartiName + "\uf88f"]).snapshots()
-                  : FirebaseFirestore.instance
-                      .collection("FavouriteAartis")
-                      .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.data.docs.length == 0) {
-                  return Center(
-                    child: Text(
-                      "Sorry Aarti Not Found",
-                      style: TextStyle(
-                          fontSize: 20.0, fontWeight: FontWeight.w700),
-                    ),
-                  );
-                }
-                return (snapshot.connectionState == ConnectionState.waiting)
-                    ? Center(child: CircularProgressIndicator())
-                    : ListView.builder(
-                        itemCount: snapshot.data.docs.length,
-                        itemBuilder: (BuildContext context, int index) {
-                          // print(snapshot.data.docs.length);
-                          DocumentSnapshot data = snapshot.data.docs[index];
-                          print(snapshot.data.docs);
-                          return InkWell(
-                            child: Padding(
-                              padding: const EdgeInsets.all(10.0),
-                              child: Container(
-                                  height: 60.0,
-                                  decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                          colors: [
-                                        Colors.blue[100],
-                                        Colors.green[100]
-                                      ])),
-                                  child: ListTile(
-                                    leading: Image.network(snapshot
-                                        .data.docs[index]
-                                        .data()["image"]),
-                                    title: Text(
-                                      snapshot.data.docs[index]
-                                          .data()["name_marathi"],
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.w700),
-                                    ),
-                                  )),
-                            ),
-                            onTap: () async {
-                              var docID = snapshot.data.docs[index].id;
-                              // print(docID);
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          specificAarti_view(id: docID)));
+          child: SafeArea(
+            child: Scaffold(
+                body: FutureBuilder(
+                    future: getSpecificUserId(),
+                    builder:
+                        (BuildContext context, AsyncSnapshot<String> snapshot) {
+                      if (snapshot.hasData) {
+                        if (userId == "SKIPID0012345") {
+                          return StreamBuilder<QuerySnapshot>(
+                            stream: (aartiName != "" && aartiName != null)
+                                ? FirebaseFirestore.instance
+                                    .collection("Aartis")
+                                    .orderBy("name_english")
+                                    .startAt([aartiName]).endAt(
+                                        [aartiName + "\uf88f"]).snapshots()
+                                : FirebaseFirestore.instance
+                                    .collection("Aartis")
+                                    .where(FieldPath.documentId,
+                                        whereIn: favAartis.toList())
+                                    .snapshots(),
+                            builder: (context, snapshot) {
+                              if (snapshot.data.docs.length == 0) {
+                                return Center(
+                                  child: Text(
+                                    "Sorry Aarti Not Found",
+                                    style: TextStyle(
+                                        fontSize: 20.0,
+                                        fontWeight: FontWeight.w700),
+                                  ),
+                                );
+                              }
+                              return (snapshot.connectionState ==
+                                      ConnectionState.waiting)
+                                  ? Center(child: CircularProgressIndicator())
+                                  : ListView.builder(
+                                      itemCount: snapshot.data.docs.length,
+                                      itemBuilder:
+                                          (BuildContext context, int index) {
+                                        // DocumentSnapshot data =
+                                        //     snapshot.data.docs[index];
+                                        return InkWell(
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(10.0),
+                                            child: Container(
+                                                height: 60.0,
+                                                decoration: BoxDecoration(
+                                                    gradient: LinearGradient(
+                                                        begin:
+                                                            Alignment.topLeft,
+                                                        end: Alignment
+                                                            .bottomRight,
+                                                        colors: [
+                                                      Colors.blue[100],
+                                                      Colors.green[100]
+                                                    ])),
+                                                child: ListTile(
+                                                  leading: Image.network(
+                                                      snapshot.data.docs[index]
+                                                          .data()["image"]),
+                                                  title: Text(
+                                                    snapshot.data.docs[index]
+                                                        .data()["name_marathi"],
+                                                    style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.w700),
+                                                  ),
+                                                )),
+                                          ),
+                                          onTap: () async {
+                                            var docID =
+                                                snapshot.data.docs[index].id;
+                                            // print(docID);
+                                            Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        specificAarti_view(
+                                                            id: docID)));
+                                          },
+                                        );
+                                      },
+                                    );
                             },
                           );
-                        },
+                        }
+                        return StreamBuilder<QuerySnapshot>(
+                          stream: (aartiName != "" && aartiName != null)
+                              ? FirebaseFirestore.instance
+                                  .collection("FavouriteAartis")
+                                  .doc(userId)
+                                  .collection("FavouriteAartis")
+                                  .orderBy("name_english")
+                                  .startAt([aartiName]).endAt(
+                                      [aartiName + "\uf88f"]).snapshots()
+                              : FirebaseFirestore.instance
+                                  .collection("FavouriteAartis")
+                                  .doc(userId)
+                                  .collection("FavouriteAartis")
+                                  .snapshots(),
+                          builder: (context, snapshot) {
+                            if (snapshot.data.docs.length == 0) {
+                              return Center(
+                                child: Text(
+                                  "Sorry Aarti Not Found",
+                                  style: TextStyle(
+                                      fontSize: 20.0,
+                                      fontWeight: FontWeight.w700),
+                                ),
+                              );
+                            }
+                            return (snapshot.connectionState ==
+                                    ConnectionState.waiting)
+                                ? Center(child: CircularProgressIndicator())
+                                : ListView.builder(
+                                    itemCount: snapshot.data.docs.length,
+                                    itemBuilder:
+                                        (BuildContext context, int index) {
+                                      // DocumentSnapshot data =
+                                      //     snapshot.data.docs[index];
+                                      return InkWell(
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(10.0),
+                                          child: Container(
+                                              height: 60.0,
+                                              decoration: BoxDecoration(
+                                                  gradient: LinearGradient(
+                                                      begin: Alignment.topLeft,
+                                                      end:
+                                                          Alignment.bottomRight,
+                                                      colors: [
+                                                    Colors.blue[100],
+                                                    Colors.green[100]
+                                                  ])),
+                                              child: ListTile(
+                                                leading: Image.network(snapshot
+                                                    .data.docs[index]
+                                                    .data()["image"]),
+                                                title: Text(
+                                                  snapshot.data.docs[index]
+                                                      .data()["name_marathi"],
+                                                  style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.w700),
+                                                ),
+                                              )),
+                                        ),
+                                        onTap: () async {
+                                          var docID =
+                                              snapshot.data.docs[index].id;
+                                          // print(docID);
+                                          Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      specificAarti_view(
+                                                          id: docID)));
+                                        },
+                                      );
+                                    },
+                                  );
+                          },
+                        );
+                      }
+                      return Center(
+                        child: CircularProgressIndicator(),
                       );
-              },
-            ),
+                    })),
           ),
         ));
   }
