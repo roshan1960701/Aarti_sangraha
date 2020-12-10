@@ -1,7 +1,9 @@
 import 'package:aarti_sangraha/Screens/home_view.dart';
-import 'package:connectivity/connectivity.dart';
+import 'package:aarti_sangraha/utilities.dart';
 import 'package:flutter/material.dart';
 import 'package:email_validator/email_validator.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:progress_dialog/progress_dialog.dart';
 import 'package:aarti_sangraha/Model/databaseHelper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -25,38 +27,80 @@ class _registration_viewState extends State<registration_view> {
   final TextEditingController lastNameController = new TextEditingController();
   final TextEditingController emailController = new TextEditingController();
   GoogleSignIn _googleSignIn = GoogleSignIn();
+  utilities util = new utilities();
   FirebaseAuth _googleAuth;
-
   bool ignorePointer = false;
   bool isUserSignedIn = false;
   bool dateCheck = false;
   ProgressDialog progressDialog;
   DateTime selectedDate = DateTime.now();
   String insertedDate = DateTime.now().toString();
-  DateTime newDate = DateTime.now();
-
-  TextStyle btnStyle = new TextStyle(
-      color: Colors.white, fontWeight: FontWeight.w500, fontSize: 20.0);
-
-  final Shader linearGradient = LinearGradient(
-    colors: <Color>[Colors.blue, Colors.purple],
-  ).createShader(Rect.fromLTWH(0.0, 0.0, 200.0, 70.0));
+  DateTime currentDate = DateTime.now();
 
   @override
   void initState() {
-    checkConnectivity();
     initApp();
+    Future.delayed(Duration.zero, () {
+      util.checkConnectivity(context);
+    });
     super.initState();
-    //queryall();
-    // _signInWithEmailAndLink();
-    // _emailSignIn();
-    // sendSignInLinkToEmail("roshanw1998@gmail.com");
   }
 
   void initApp() async {
     FirebaseApp defaultApp = await Firebase.initializeApp();
     _googleAuth = FirebaseAuth.instanceFor(app: defaultApp);
     checkIfUserIsSignedIn();
+  }
+
+  Widget formText(field) {
+    return Padding(
+      padding: const EdgeInsets.all(5.0),
+      child: Align(
+          alignment: Alignment.topLeft,
+          child: Text(
+            field,
+            style: GoogleFonts.poppins(
+                fontSize: 14.0, fontStyle: FontStyle.normal),
+          )),
+    );
+  }
+
+  Widget formTextFields(controller, inputType, validator, lengthValidator) {
+    return TextFormField(
+      autovalidate: true,
+      validator: (value) {
+        if (value.isEmpty) {
+          return validator;
+        }
+        if (value.length > 15) {
+          return lengthValidator;
+        }
+        return null;
+      },
+      controller: controller,
+      keyboardType: inputType,
+      decoration: InputDecoration(
+        contentPadding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),
+        border: InputBorder.none,
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(100.0)),
+          borderSide: BorderSide(color: Color(0x73000000)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(100.0)),
+          borderSide: BorderSide(color: Color(0xFFFF8C00)),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(100.0)),
+          borderSide: BorderSide(color: Color(0x73000000)),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(100.0)),
+          borderSide: BorderSide(color: Color(0xFFFF8C00)),
+        ),
+      ),
+      maxLength: 15,
+    );
   }
 
   void checkIfUserIsSignedIn() async {
@@ -149,7 +193,7 @@ class _registration_viewState extends State<registration_view> {
     // });
   }
 
-  void insertData() async {
+  /*void insertData() async {
     Map<String, dynamic> row = {
       databaseHelper.columnFirstName: fistNameController.text,
       databaseHelper.columnLastName: lastNameController.text,
@@ -166,34 +210,7 @@ class _registration_viewState extends State<registration_view> {
             MaterialPageRoute(builder: (context) => home_view()));
       });
     });
-    //       Future.delayed(Duration(seconds: 4)).then((value) {
-    //         pr.hide().whenComplete(() {
-    //           Navigator.of(context).pushReplacement(
-    //               MaterialPageRoute(
-    //                   builder: (context) => home_view()));
-  }
-
-  checkConnectivity() async {
-    var result = await Connectivity().checkConnectivity();
-
-    if (result == ConnectivityResult.none) {
-      showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text("No Internet Connection!!!"),
-              content: Text("Please connect Internet"),
-              actions: [
-                FlatButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: Text("Close"))
-              ],
-            );
-          });
-    }
-  }
+  }*/
 
   registerUser(String fName, String lName, String email, String dob,
       String insertedDate) async {
@@ -367,15 +384,21 @@ class _registration_viewState extends State<registration_view> {
                   style: TextStyle(color: Colors.black54),
                 ),
                 onPressed: () async {
+                  setState(() {
+                    ignorePointer = true;
+                  });
                   SharedPreferences googleUid =
                       await SharedPreferences.getInstance();
                   googleUid.setString('userId', "SKIPID0012345");
+                  SharedPreferences sharedPreferences =
+                      await SharedPreferences.getInstance();
+                  sharedPreferences.setStringList("Fav", [" "]);
                   Navigator.pushReplacement(context,
                       MaterialPageRoute(builder: (context) => home_view()));
                 },
               ),
               FlatButton(
-                  color: Colors.blue,
+                  color: Color(0xFFF06701),
                   onPressed: () {
                     Navigator.pop(context);
                   },
@@ -421,172 +444,163 @@ class _registration_viewState extends State<registration_view> {
       child: SafeArea(
         child: Scaffold(
           resizeToAvoidBottomPadding: false,
+          appBar: AppBar(
+            elevation: 10.0,
+            centerTitle: true,
+            title: Text("Register",
+                style: GoogleFonts.playfairDisplay(
+                    fontSize: 20.0, color: Colors.white)),
+            flexibleSpace: Container(
+              decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                      colors: [Color(0xFFF06701), Color(0xFFFF8804)])),
+            ),
+          ),
           body: IgnorePointer(
-            ignoring: false,
-            // ignoring: ignorePointer,
-            child: Form(
-              key: formKey,
-              child: Padding(
-                padding: const EdgeInsets.only(
-                  top: 60.0,
-                  left: 40.0,
-                  right: 40.0,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(top: 10.0, bottom: 5.0),
-                      child: Text(
-                        "Register",
-                        style: TextStyle(
-                            foreground: Paint()..shader = linearGradient,
-                            fontSize: 30.0,
-                            fontFamily: 'Montserrat',
-                            fontWeight: FontWeight.w800),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(5.0),
-                      child: TextFormField(
-                        controller: fistNameController,
+            ignoring: ignorePointer,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.vertical,
+              child: Form(
+                key: formKey,
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                    top: 40.0,
+                    left: 40.0,
+                    right: 40.0,
+                  ),
+                  child: Column(
+                    children: [
+                      formText("First Name"),
+                      formTextFields(
+                          fistNameController,
+                          TextInputType.text,
+                          "Please Enter First Name",
+                          "First Name should not be greater than 15 character"),
+                      formText("Last Name"),
+                      formTextFields(
+                          lastNameController,
+                          TextInputType.text,
+                          "Please Enter Last Name",
+                          "Last Name should not be greater than 15 character"),
+                      formText("Email"),
+                      TextFormField(
+                        autovalidate: true,
                         validator: (value) {
                           if (value.isEmpty) {
-                            return "Please enter First Name";
+                            return "Please Enter email";
                           }
-                          return null;
-                        },
-                        decoration: InputDecoration(
-                          hintText: "First Name",
-                          border: InputBorder.none,
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(5.0)),
-                            borderSide: BorderSide(color: Color(0x73000000)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(5.0)),
-                            borderSide: BorderSide(color: Color(0xFF00BCD4)),
-                          ),
-                        ),
-                        maxLength: 15,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(5.0),
-                      child: TextFormField(
-                        controller: lastNameController,
-                        validator: (value) {
-                          if (value.isEmpty) {
-                            return "Please enter Last Name";
-                          }
-                          return null;
-                        },
-                        decoration: InputDecoration(
-                          hintText: "Last Name",
-                          border: InputBorder.none,
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(5.0)),
-                            borderSide: BorderSide(color: Color(0x73000000)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(5.0)),
-                            borderSide: BorderSide(color: Color(0xFF00BCD4)),
-                          ),
-                        ),
-                        maxLength: 15,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(5.0),
-                      child: TextFormField(
-                        validator: (value) {
-                          if (value.isEmpty) {
-                            return "PLease enter email";
+                          if (value.length > 30) {
+                            return "Email should not be grater that 30 character";
                           }
                           if (!EmailValidator.validate(value)) {
-                            return "Please enter valid email";
+                            return "Please Enter valid email";
                           }
                           return null;
                         },
                         controller: emailController,
+                        keyboardType: TextInputType.emailAddress,
                         decoration: InputDecoration(
-                          hintText: "Email Id",
+                          contentPadding: EdgeInsets.symmetric(
+                              vertical: 10.0, horizontal: 10.0),
                           border: InputBorder.none,
                           enabledBorder: OutlineInputBorder(
                             borderRadius:
-                                BorderRadius.all(Radius.circular(5.0)),
+                                BorderRadius.all(Radius.circular(100.0)),
                             borderSide: BorderSide(color: Color(0x73000000)),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius:
-                                BorderRadius.all(Radius.circular(5.0)),
-                            borderSide: BorderSide(color: Color(0xFF00BCD4)),
+                                BorderRadius.all(Radius.circular(100.0)),
+                            borderSide: BorderSide(color: Color(0xFFFF8C00)),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(100.0)),
+                            borderSide: BorderSide(color: Color(0x73000000)),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(100.0)),
+                            borderSide: BorderSide(color: Color(0xFFFF8C00)),
                           ),
                         ),
                         maxLength: 30,
+                        maxLengthEnforced: true,
                       ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.all(5.0),
-                      child: Container(
-                          margin: EdgeInsets.only(left: 50.0, right: 50.0),
-                          decoration: BoxDecoration(
-                              border: Border.all(color: Colors.blueAccent)),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: <Widget>[
-                              Text(
-                                "DOB: ",
-                                style: TextStyle(color: Colors.black45),
-                              ),
-                              Text(
-                                "${selectedDate.toLocal()}".split(' ')[0],
-                                style: TextStyle(
-                                    fontSize: 18.0, color: Colors.blue),
-                              ),
-                              IconButton(
-                                  tooltip: 'Tap to select Date',
-                                  icon: Icon(
-                                    Icons.calendar_today,
-                                    color: Colors.blue,
+                      Padding(
+                        padding: EdgeInsets.only(top: 15.0),
+                        child: GestureDetector(
+                          onTap: () {
+                            _selectDate(context);
+                          },
+                          child: Container(
+                              decoration: BoxDecoration(
+                                  shape: BoxShape.rectangle,
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(100)),
+                                  border: Border.all(color: Color(0x73000000))),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: <Widget>[
+                                  formText("DOB"),
+                                  Text(
+                                    '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
+                                    style: TextStyle(
+                                        fontSize: 18.0,
+                                        color: Color(0x73000000)),
                                   ),
-                                  onPressed: () {
-                                    _selectDate(context);
-                                  })
-                            ],
-                          )),
-                    ),
-                    Text(
-                      dateCheck ? "Age must be greater that 5 years " : " ",
-                      style: TextStyle(color: Colors.red),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(
-                        top: 10.0,
+                                  IconButton(
+                                      tooltip: 'Tap to select Date',
+                                      icon: Icon(
+                                        Icons.calendar_today_rounded,
+                                      ),
+                                      onPressed: () {
+                                        _selectDate(context);
+                                      })
+                                ],
+                              )),
+                        ),
                       ),
-                      child: MaterialButton(
-                          elevation: 10.0,
-                          minWidth: 140.0,
-                          height: 40.0,
-                          splashColor: Colors.white,
-                          color: Colors.blue,
-                          child: Text(
-                            "Submit",
-                            style: btnStyle,
-                          ),
-                          onPressed: () async {
-                            try {
+                      Text(
+                        dateCheck ? "Age must be greater that 5 years " : " ",
+                        style: TextStyle(color: Colors.red),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          top: 10.0,
+                        ),
+                        child: MaterialButton(
+                            elevation: 10.0,
+                            height: 40.0,
+                            child: Container(
+                              height: 40.0,
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 120.0, vertical: 10.0),
+                              child: Text(
+                                "Submit",
+                                style: GoogleFonts.poppins(
+                                    color: Colors.white,
+                                    fontSize: 14.0,
+                                    fontStyle: FontStyle.normal),
+                              ),
+                              decoration: BoxDecoration(
+                                  shape: BoxShape.rectangle,
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(100.0)),
+                                  gradient: LinearGradient(colors: [
+                                    Color(0xFFF06701),
+                                    Color(0xFFFF8804)
+                                  ])),
+                            ),
+                            onPressed: () async {
                               if (formKey.currentState.validate()) {
-                                if (newDate.year.toInt() -
+                                if (currentDate.year.toInt() -
                                         selectedDate.year.toInt() >=
                                     5) {
                                   setState(() {
+                                    ignorePointer = true;
                                     dateCheck = false;
-                                    //   ignorePointer = true;
                                   });
                                   //registerInFireStore();
                                   registerUser(
@@ -595,125 +609,83 @@ class _registration_viewState extends State<registration_view> {
                                       emailController.text,
                                       selectedDate.toString(),
                                       insertedDate);
+
+                                  print(fistNameController.text);
+                                  print(lastNameController.text);
+                                  print(emailController.text);
+                                  print(selectedDate.toString());
+                                  print(insertedDate);
                                 } else {
                                   setState(() {
                                     dateCheck = true;
                                   });
                                 }
                               }
-                            } catch (Exception) {
-                              showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return AlertDialog(
-                                      title: Text(
-                                          "Please check your Internet Connection!!!"),
-                                    );
-                                  });
-                            }
-                            // try {
-                            //   if (formKey.currentState.validate()) {
-                            //     // send = true;
-                            //     dbRef.push().set({
-                            //       "First Name": fistNameController.text,
-                            //       "Last Name": lastNameController.text,
-                            //       "DOB": selectedDate.toString(),
-                            //       "Email": emailController.text,
-                            //     }).then((_) {
-                            //       print("Data Added");
-                            //       pr.show();
-                            //       Future.delayed(Duration(seconds: 4)).then((value) {
-                            //         pr.hide().whenComplete(() {
-                            //           Navigator.of(context).pushReplacement(
-                            //               MaterialPageRoute(
-                            //                   builder: (context) => home_view()));
-                            //         });
-                            //       });
-                            //       fistNameController.clear();
-                            //       lastNameController.clear();
-                            //       emailController.clear();
-                            //     }).catchError((onError) {
-                            //       print(onError);
-                            //       showDialog(
-                            //           context: context,
-                            //           builder: (context) {
-                            //             return AlertDialog(
-                            //               title: Text("Registration Failed"),
-                            //             );
-                            //           });
-                            //     });
-                            //   }
-                            // } catch (Exception) {
-                            //   showDialog(
-                            //       context: context,
-                            //       builder: (BuildContext context) {
-                            //         return AlertDialog(
-                            //           title: Text("Registration Failed"),
-                            //         );
-                            //       });
-                            // }
-                          }),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 5.0),
-                      child: FlatButton(
-                          splashColor: Colors.transparent,
-                          child: Text(
-                            "Skip",
-                            style: TextStyle(
-                                fontSize: 18.0, color: Colors.black54),
-                          ),
-                          onPressed: () async {
-                            skipAlert();
-                          }),
-                    ),
-                    RaisedButton(
-                      padding:
-                          EdgeInsets.only(top: 3.0, bottom: 3.0, left: 3.0),
-                      color: const Color(0xFFFFFFFF),
-                      child: new Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          new Container(
-                              padding: EdgeInsets.only(left: 10.0, right: 10.0),
-                              child: Row(
-                                children: [
-                                  Image.asset(
-                                    "lib/asset/logo/Google_logo.png",
-                                    height: 30.0,
-                                    width: 30.0,
-                                  ),
-                                  SizedBox(
-                                    width: 10.0,
-                                  ),
-                                  Text(
-                                    "Sign in with Google",
-                                    style: TextStyle(
-                                        color: Colors.grey,
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                ],
-                              )),
-                        ],
+                            }),
                       ),
-                      onPressed: () async {
-                        setState(() {
-                          ignorePointer = true;
-                        });
-                        // Navigator.push(
-                        //     context,
-                        //     MaterialPageRoute(
-                        //         builder: (context) => home_Page()));
-                        User user = await _handleSignIn();
-                        var name = new List();
-                        name = user.displayName.split(" ");
-                        registerUser(
-                            name[0], name[1], user.email, " ", insertedDate);
-                        _googleSignIn.signOut();
-                        // onGoogleSignIn(context);
-                      },
-                    )
-                  ],
+                      Padding(
+                        padding: const EdgeInsets.only(top: 5.0),
+                        child: FlatButton(
+                            splashColor: Colors.transparent,
+                            child: Text(
+                              "Skip",
+                              style: GoogleFonts.poppins(
+                                  color: Colors.black54,
+                                  fontSize: 14.0,
+                                  fontStyle: FontStyle.normal),
+                            ),
+                            onPressed: () async {
+                              skipAlert();
+                            }),
+                      ),
+                      MaterialButton(
+                        height: 40.0,
+                        child: Container(
+                            margin: EdgeInsets.only(left: 10.0, right: 10.0),
+                            height: 40.0,
+                            decoration: BoxDecoration(
+                                shape: BoxShape.rectangle,
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(100.0)),
+                                gradient: LinearGradient(colors: [
+                                  Color(0xFFF06701),
+                                  Color(0xFFFF8804)
+                                ])),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Image.asset(
+                                  "asset/logo/Google_logo.png",
+                                  height: 30.0,
+                                  width: 30.0,
+                                ),
+                                SizedBox(
+                                  width: 10.0,
+                                ),
+                                Text(
+                                  "Sign in with Google",
+                                  style: GoogleFonts.poppins(
+                                      color: Colors.white,
+                                      fontSize: 14.0,
+                                      fontStyle: FontStyle.normal),
+                                ),
+                              ],
+                            )),
+                        onPressed: () async {
+                          User user = await _handleSignIn();
+                          var name = new List();
+                          name = user.displayName.split(" ");
+                          registerUser(
+                              name[0], name[1], user.email, " ", insertedDate);
+                          _googleSignIn.signOut();
+                          setState(() {
+                            ignorePointer = true;
+                          });
+                          // onGoogleSignIn(context);
+                        },
+                      )
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -721,5 +693,13 @@ class _registration_viewState extends State<registration_view> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    fistNameController.dispose();
+    lastNameController.dispose();
+    emailController.dispose();
+    super.dispose();
   }
 }

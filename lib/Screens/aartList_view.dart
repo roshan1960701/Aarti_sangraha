@@ -1,8 +1,8 @@
 import 'package:aarti_sangraha/Screens/specificAarti_view.dart';
+import 'package:aarti_sangraha/utilities.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:connectivity/connectivity.dart';
 
 class aartiList_view extends StatefulWidget {
   var value;
@@ -18,8 +18,8 @@ class _aartiList_viewState extends State<aartiList_view> {
   _aartiList_viewState(this.value);
 
   final firestoreInstance = FirebaseFirestore.instance;
-  final firestoreInstanceSecond = FirebaseFirestore.instance;
   var aartiName;
+  utilities util = new utilities();
 
   Icon cusSearchIcon = Icon(
     Icons.search,
@@ -30,351 +30,163 @@ class _aartiList_viewState extends State<aartiList_view> {
   @override
   void initState() {
     // TODO: implement initState
-    checkConnectivity();
+    Future.delayed(Duration.zero, () {
+      util.checkConnectivity(context);
+    });
     super.initState();
-    //getArtiSangraha();
-    //ganeshAarti();
-    //insertData();
-    //queryall();
   }
 
-  // Future<QuerySnapshot> getArtiSangraha() async {
-  //   firestoreInstance.collection("Aartis").get().then((querySnapshot) {
-  //     querySnapshot.docs.forEach((result) {
-  //       //print(result.data());
-  //       //print(result.data()["id"]);
-  //       if (result.data()["id"] == value) {
-  //         getListOfAarti();
-  //       }
-  //     });
-  //   });
-  // }
-
-  // Future<QuerySnapshot> getListOfAarti() async {
-  //   firestoreInstance
-  //       .collection("Aartis")
-  //       .get()
-  //       .then((value) => value.docs.forEach((element) {
-  //             title = element.data()["title"];
-  //             img = element.data()["image"];
-  //             // print(element.data()["title"]);
-  //           }));
-  // }
-  void getSearchAartis() async {
-    if (QuerySnapshot != null) {
-      var result = firestoreInstance
-          .collection('Aartis')
-          .orderBy("name_english")
-          .orderBy("name_marathi")
-          .startAt(["gan raya"]).endAt(["gan raya" + "\uf88f"]).snapshots();
-      print(result);
-    } else {
-      return showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text("Check Your Internet Connection"),
-            );
-          });
-    }
+  Future<QuerySnapshot> unSearchedAarti() async {
+    FirebaseFirestore.instance
+        .collection("Aartis")
+        .where("category", arrayContains: value)
+        .snapshots();
   }
-
-  checkConnectivity() async {
-    var result = await Connectivity().checkConnectivity();
-
-    if (result == ConnectivityResult.none) {
-      showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text("No Internet Connection!!!"),
-              content: Text("Please connect Internet"),
-              actions: [
-                FlatButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: Text("Close"))
-              ],
-            );
-          });
-    }
-  }
-
-  Future getAarti() async {
-    if (QuerySnapshot != null) {
-      return Firestore.instance.collection("Aartis").snapshots();
-    } else {
-      return showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text("Check Your Internet Connection"),
-            );
-          });
-    }
-  }
-
-  // .then((value) => value.docs.forEach((element) {
-  //       title = element.data()["name_marathi"];
-  //       img = element.data()["image"];
-  //       print(title);
-  //       print(img);
-  //       print(element.id);
-  //     }));
 
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      child: Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-              icon: Icon(
-                Icons.arrow_back_ios,
-                color: Colors.white,
-              ),
-              onPressed: () {
-                Navigator.pop(context);
-              }),
-          actions: [
-            IconButton(
-                icon: cusSearchIcon,
-                onPressed: () {
-                  // showSearch(context: context, delegate: DataSearch());
-                  setState(() {
-                    if (this.cusSearchIcon.icon == Icons.search) {
-                      this.cusSearchIcon = Icon(Icons.cancel);
-                      this.cusAppBar = TextField(
-                        textInputAction: TextInputAction.go,
-                        decoration: InputDecoration(
-                            border: InputBorder.none,
-                            hintText: "Search Aarti",
-                            hintStyle: TextStyle(color: Colors.white54)),
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16.0,
-                        ),
-                        onChanged: (val) {
-                          setState(() {
-                            aartiName = val;
-                          });
-                        },
-                        //onChanged: (query) => updateSearchQuery(query),
-                      );
-                    } else {
-                      this.cusSearchIcon = Icon(Icons.search);
-                      this.cusAppBar = Text("");
-                      aartiName = null;
-                    }
-                  });
-                }),
-          ],
-          title: cusAppBar,
-        ),
-        body: StreamBuilder<QuerySnapshot>(
-          stream: (aartiName != "" && aartiName != null)
-              ? FirebaseFirestore.instance
-                  .collection('Aartis')
-                  .orderBy("name_english")
-                  .startAt([aartiName]).endAt(
-                      [aartiName + "\uf88f"]).snapshots()
-              : FirebaseFirestore.instance
-                  .collection("Aartis")
-                  .where("category", arrayContains: value)
-                  .snapshots(),
-          builder: (context, snapshot) {
-            if (snapshot.data.docs.length == 0) {
-              return Center(
-                child: Text(
-                  "Sorry Aarti Not Found",
-                  style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w700),
+      child: SafeArea(
+        child: Scaffold(
+          appBar: AppBar(
+            flexibleSpace: Container(
+              decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                      colors: [Color(0xFFF06701), Color(0xFFFF8804)])),
+            ),
+            leading: IconButton(
+                icon: Icon(
+                  Icons.arrow_back_ios,
+                  color: Colors.white,
                 ),
-              );
-            }
-            return (snapshot.connectionState == ConnectionState.waiting)
-                ? Center(child: CircularProgressIndicator())
-                : ListView.builder(
-                    itemCount: snapshot.data.docs.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      DocumentSnapshot data = snapshot.data.docs[index];
-                      return InkWell(
-                        child: Padding(
-                          padding: const EdgeInsets.all(10.0),
-                          child: Container(
-                              height: 60.0,
-                              decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                      colors: [
-                                    Colors.blue[100],
-                                    Colors.green[100]
-                                  ])),
-                              child: ListTile(
-                                leading: Image.network(
-                                  snapshot.data.docs[index].data()["image"],
-                                  fit: BoxFit.fill,
-                                ),
-                                title: Text(
-                                  snapshot.data.docs[index]
-                                      .data()["name_marathi"],
-                                  style: TextStyle(fontWeight: FontWeight.w700),
-                                ),
-                              )),
-                        ),
-                        onTap: () async {
-                          var docID = snapshot.data.docs[index].id;
-                          // print(docID);
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      specificAarti_view(id: docID)));
+                onPressed: () {
+                  Navigator.pop(context);
+                }),
+            actions: [
+              IconButton(
+                  icon: cusSearchIcon,
+                  onPressed: () {
+                    setState(() {
+                      if (this.cusSearchIcon.icon == Icons.search) {
+                        this.cusSearchIcon = Icon(Icons.cancel);
+                        this.cusAppBar = TextField(
+                          textInputAction: TextInputAction.go,
+                          decoration: InputDecoration(
+                              border: InputBorder.none,
+                              hintText: "Search Aarti",
+                              hintStyle: TextStyle(color: Colors.white54)),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16.0,
+                          ),
+                          onChanged: (val) {
+                            setState(() {
+                              aartiName = val.toLowerCase();
+                            });
+                          },
+                        );
+                      } else {
+                        this.cusSearchIcon = Icon(Icons.search);
+                        this.cusAppBar = Text("");
+                        aartiName = null;
+                      }
+                    });
+                  }),
+            ],
+            title: cusAppBar,
+          ),
+          body: StreamBuilder<QuerySnapshot>(
+            stream: (aartiName != "" && aartiName != null)
+                ? (aartiName.toLowerCase().startsWith(new RegExp('[a-z]')))
+                    ? FirebaseFirestore.instance
+                        .collection('Aartis')
+                        .orderBy("name_english")
+                        .startAt([aartiName]).endAt(
+                            [aartiName + "\uf88f"]).snapshots()
+                    : FirebaseFirestore.instance
+                        .collection('Aartis')
+                        .orderBy("name")
+                        .startAt([aartiName]).endAt(
+                            [aartiName + "\uf88f"]).snapshots()
+                : FirebaseFirestore.instance
+                    .collection("Aartis")
+                    .where("category", arrayContains: value)
+                    .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return Center(
+                  child: Text("No records found"),
+                );
+              }
+              if (!snapshot.hasData || snapshot.data.docs.isEmpty) {
+                return Center(
+                  child: Text(
+                    "Sorry Aarti Not Found",
+                    style:
+                        TextStyle(fontSize: 20.0, fontWeight: FontWeight.w700),
+                  ),
+                );
+              } else {
+                return (snapshot.connectionState == ConnectionState.waiting)
+                    ? Center(child: CircularProgressIndicator())
+                    : ListView.builder(
+                        itemCount: snapshot.data.docs.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          DocumentSnapshot data = snapshot.data.docs[index];
+                          return InkWell(
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                  top: 10, left: 10.0, right: 10.0),
+                              child: Container(
+                                  height: 60.0,
+                                  child: Card(
+                                    elevation: 10.0,
+                                    child: Row(
+                                      children: [
+                                        Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(5.0),
+                                            child: ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(5.0),
+                                              child: Image.network(
+                                                snapshot.data.docs[index]
+                                                    .data()["image"],
+                                                width: 45.0,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: EdgeInsets.only(left: 20.0),
+                                          child: Text(
+                                            snapshot.data.docs[index]
+                                                .data()["name_marathi"],
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.w700),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )),
+                            ),
+                            onTap: () async {
+                              var docID = snapshot.data.docs[index].id;
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          specificAarti_view(id: docID)));
+                            },
+                          );
                         },
                       );
-                    },
-                  );
-          },
+              }
+            },
+          ),
         ),
-        // body: FutureBuilder(
-        //   future: getAartis(),
-        //   builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-        //     if (snapshot.hasData) {
-        //       return ListView.builder(
-        //           itemCount: snapshot.data.docs.length,
-        //           itemBuilder: (BuildContext context, int index) {
-        //             return InkWell(
-        //               child: Padding(
-        //                 padding: const EdgeInsets.all(10.0),
-        //                 child: Container(
-        //                     height: 50.0,
-        //                     decoration: BoxDecoration(
-        //                         gradient: LinearGradient(
-        //                             begin: Alignment.topLeft,
-        //                             end: Alignment.bottomRight,
-        //                             colors: [
-        //                           Colors.blue[100],
-        //                           Colors.green[100]
-        //                         ])),
-        //                     child: ListTile(
-        //                       leading: Image.network(
-        //                           snapshot.data.docs[index].data()["image"]),
-        //                       title: Text(
-        //                         snapshot.data.docs[index]
-        //                             .data()["name_marathi"],
-        //                         style: TextStyle(fontWeight: FontWeight.w700),
-        //                       ),
-        //                     )),
-        //               ),
-        //               onTap: () async {
-        //                 var docID = snapshot.data.docs[index].id;
-        //                 // print(docID);
-        //                 Navigator.push(
-        //                     context,
-        //                     MaterialPageRoute(
-        //                         builder: (context) =>
-        //                             specificAarti_view(id: docID)));
-        //               },
-        //             );
-        //           });
-        //     }
-        //     return Center(child: CircularProgressIndicator());
-        //   },
-        // ),
       ),
     );
   }
 }
-
-// class DataSearch extends SearchDelegate<String> {
-//   final firestore = Firestore.instance;
-//
-//   final cities = [
-//     "colima",
-//     "monterrey",
-//     "jalisco",
-//     "sinaloa",
-//     "cdmx",
-//     "sonora",
-//     "baja california",
-//     "chiapa",
-//     "tabasco"
-//   ];
-//
-//   // final recentCities = [
-//   //   "colima",
-//   //   "monterrey",
-//   //   "jalisco",
-//   // ];
-//
-//   @override
-//   List<Widget> buildActions(BuildContext context) {
-//     // TODO: implement buildActions
-//     return [
-//       IconButton(
-//           icon: Icon(Icons.clear),
-//           onPressed: () {
-//             query = "";
-//           })
-//     ];
-//     throw UnimplementedError();
-//   }
-//
-//   @override
-//   Widget buildLeading(BuildContext context) {
-//     // TODO: implement buildLeading
-//     return IconButton(
-//       icon: AnimatedIcon(
-//         icon: AnimatedIcons.menu_arrow,
-//         progress: transitionAnimation,
-//       ),
-//       onPressed: () {
-//         close(context, null);
-//       },
-//     );
-//     throw UnimplementedError();
-//   }
-//
-//   @override
-//   Widget buildResults(BuildContext context) {
-//     // TODO: implement buildResults
-//     return Center(
-//       child: Container(
-//           height: 100.0,
-//           width: 100.0,
-//           child: Card(
-//             color: Colors.red,
-//             child: Center(
-//               child: Text(query),
-//             ),
-//           )),
-//     );
-//     throw UnimplementedError();
-//   }
-//
-//   @override
-//   Widget buildSuggestions(BuildContext context) {
-//     // TODO: implement buildSuggestions
-//     final suggestionList = cities.where((p) => p.startsWith(query)).toList();
-//
-//     return ListView.builder(
-//       itemBuilder: (context, index) => ListTile(
-//         onTap: () {
-//           showResults(context);
-//         },
-//         title: RichText(
-//             text: TextSpan(
-//                 text: suggestionList[index].substring(0, query.length),
-//                 style:
-//                     TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-//                 children: [
-//               TextSpan(
-//                   text: suggestionList[index].substring(query.length),
-//                   style: TextStyle(color: Colors.grey))
-//             ])),
-//       ),
-//       itemCount: suggestionList.length,
-//     );
-//     throw UnimplementedError();
-//   }
-// }

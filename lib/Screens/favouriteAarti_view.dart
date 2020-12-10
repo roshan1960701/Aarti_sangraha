@@ -1,9 +1,9 @@
 import 'package:aarti_sangraha/Screens/home_view.dart';
+import 'package:aarti_sangraha/utilities.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:aarti_sangraha/Screens/specificAarti_view.dart';
-import 'package:connectivity/connectivity.dart';
 
 class favouriteAarti_view extends StatefulWidget {
   favouriteAarti_view({Key key}) : super(key: key);
@@ -17,8 +17,7 @@ class _favouriteAarti_viewState extends State<favouriteAarti_view> {
   var id;
   final fireStoreInstance = FirebaseFirestore.instance;
   var favAartis;
-  List aartiList = new List();
-
+  utilities util = new utilities();
   var userId;
   Icon cusSearchIcon = Icon(
     Icons.search,
@@ -28,11 +27,12 @@ class _favouriteAarti_viewState extends State<favouriteAarti_view> {
   @override
   void initState() {
     // TODO: implement initState
-    //getFavList();
+
+    Future.delayed(Duration.zero, () {
+      util.checkConnectivity(context);
+    });
     checkUser();
-    checkConnectivity();
     super.initState();
-    // getFavouriteAartis();
   }
 
   Future<String> getSpecificUserId() async {
@@ -45,122 +45,97 @@ class _favouriteAarti_viewState extends State<favouriteAarti_view> {
   checkUser() async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
     favAartis = sharedPreferences.getStringList("Fav");
-
-    fireStoreInstance
-        .collection("Aartis")
-        .where(FieldPath.documentId, whereIn: favAartis.toList())
-        .get()
-        .then((value) {
-      value.docs.forEach((element) {
-        aartiList.add(element.data()['name_english']);
-        print(aartiList);
-      });
-    });
-  }
-
-  Future getFavList() async {
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    var favAartis = sharedPreferences.getStringList("Fav");
-  }
-
-  checkConnectivity() async {
-    var result = await Connectivity().checkConnectivity();
-
-    if (result == ConnectivityResult.none) {
-      showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text("No Internet Connection!!!"),
-              content: Text("Please connect Internet"),
-              actions: [
-                FlatButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: Text("Close"))
-              ],
-            );
-          });
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-              icon: Icon(Icons.arrow_back_ios),
-              onPressed: () {
-                Navigator.pushReplacement(context,
-                    MaterialPageRoute(builder: (context) => home_view()));
-              }),
-          actions: [
-            IconButton(
-                icon: cusSearchIcon,
-                onPressed: () {
-                  setState(() {
-                    if (this.cusSearchIcon.icon == Icons.search) {
-                      this.cusSearchIcon = Icon(Icons.cancel);
-                      this.cusAppBar = TextField(
-                        textInputAction: TextInputAction.go,
-                        onChanged: (val) {
-                          setState(() {
-                            aartiName = val;
-                          });
-                        },
-                        decoration: InputDecoration(
-                            border: InputBorder.none,
-                            hintText: "Search Aarti",
-                            hintStyle: TextStyle(color: Colors.white54)),
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16.0,
-                        ),
-                        //onChanged: (query) => updateSearchQuery(query),
-                      );
-                    } else {
-                      this.cusSearchIcon = Icon(Icons.search);
-                      this.cusAppBar = Text("");
-                      aartiName = null;
-                    }
-                  });
-                })
-          ],
-          title: cusAppBar,
-        ),
-        body: WillPopScope(
-          child: SafeArea(
-            child: Scaffold(
-                body: FutureBuilder(
-                    future: getSpecificUserId(),
-                    builder:
-                        (BuildContext context, AsyncSnapshot<String> snapshot) {
-                      if (snapshot.hasData) {
-                        if (userId == "SKIPID0012345") {
-                          return StreamBuilder<QuerySnapshot>(
-                            stream: (aartiName != "" && aartiName != null)
-                                ? FirebaseFirestore.instance
-                                    .collection("Aartis")
-                                    .orderBy("name_english")
-                                    .startAt([aartiName]).endAt(
-                                        [aartiName + "\uf88f"]).snapshots()
-                                : FirebaseFirestore.instance
-                                    .collection("Aartis")
-                                    .where(FieldPath.documentId,
-                                        whereIn: favAartis.toList())
-                                    .snapshots(),
-                            builder: (context, snapshot) {
-                              if (snapshot.data.docs.length == 0) {
-                                return Center(
-                                  child: Text(
-                                    "Sorry Aarti Not Found",
-                                    style: TextStyle(
-                                        fontSize: 20.0,
-                                        fontWeight: FontWeight.w700),
-                                  ),
-                                );
-                              }
+    return WillPopScope(
+      child: SafeArea(
+          child: Scaffold(
+              appBar: AppBar(
+                flexibleSpace: Container(
+                  decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                          colors: [Color(0xFFF06701), Color(0xFFFF8804)])),
+                ),
+                leading: IconButton(
+                    icon: Icon(Icons.arrow_back_ios),
+                    onPressed: () {
+                      Navigator.pushReplacement(context,
+                          MaterialPageRoute(builder: (context) => home_view()));
+                    }),
+                actions: [
+                  IconButton(
+                      icon: cusSearchIcon,
+                      onPressed: () {
+                        setState(() {
+                          if (this.cusSearchIcon.icon == Icons.search) {
+                            this.cusSearchIcon = Icon(Icons.cancel);
+                            this.cusAppBar = TextField(
+                              textInputAction: TextInputAction.go,
+                              onChanged: (val) {
+                                setState(() {
+                                  aartiName = val.toLowerCase();
+                                });
+                              },
+                              decoration: InputDecoration(
+                                  border: InputBorder.none,
+                                  hintText: "Search Aarti",
+                                  hintStyle: TextStyle(color: Colors.white54)),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16.0,
+                              ),
+                              //onChanged: (query) => updateSearchQuery(query),
+                            );
+                          } else {
+                            this.cusSearchIcon = Icon(Icons.search);
+                            this.cusAppBar = Text("");
+                            aartiName = null;
+                          }
+                        });
+                      })
+                ],
+                title: cusAppBar,
+              ),
+              body: FutureBuilder(
+                  future: getSpecificUserId(),
+                  builder:
+                      (BuildContext context, AsyncSnapshot<String> snapshot) {
+                    if (snapshot.hasData) {
+                      if (userId == "SKIPID0012345") {
+                        return StreamBuilder<QuerySnapshot>(
+                          stream: (aartiName != "" && aartiName != null)
+                              ? (aartiName
+                                      .toLowerCase()
+                                      .startsWith(new RegExp('[a-z]')))
+                                  ? FirebaseFirestore.instance
+                                      .collection("Aartis")
+                                      .orderBy("name_english")
+                                      .startAt([aartiName]).endAt(
+                                          [aartiName + "\uf88f"]).snapshots()
+                                  : FirebaseFirestore.instance
+                                      .collection("Aartis")
+                                      .orderBy("name")
+                                      .startAt([aartiName]).endAt(
+                                          [aartiName + "\uf88f"]).snapshots()
+                              : FirebaseFirestore.instance
+                                  .collection("Aartis")
+                                  .where(FieldPath.documentId,
+                                      whereIn: favAartis.toList())
+                                  .snapshots(),
+                          builder: (context, snapshot) {
+                            if (!snapshot.hasData ||
+                                snapshot.data.docs.isEmpty) {
+                              return Center(
+                                child: Text(
+                                  "Sorry Aarti Not Found",
+                                  style: TextStyle(
+                                      fontSize: 20.0,
+                                      fontWeight: FontWeight.w700),
+                                ),
+                              );
+                            } else {
                               return (snapshot.connectionState ==
                                       ConnectionState.waiting)
                                   ? Center(child: CircularProgressIndicator())
@@ -172,29 +147,49 @@ class _favouriteAarti_viewState extends State<favouriteAarti_view> {
                                         //     snapshot.data.docs[index];
                                         return InkWell(
                                           child: Padding(
-                                            padding: const EdgeInsets.all(10.0),
+                                            padding: const EdgeInsets.only(
+                                                top: 10.0,
+                                                left: 10.0,
+                                                right: 10.0),
                                             child: Container(
                                                 height: 60.0,
-                                                decoration: BoxDecoration(
-                                                    gradient: LinearGradient(
-                                                        begin:
-                                                            Alignment.topLeft,
-                                                        end: Alignment
-                                                            .bottomRight,
-                                                        colors: [
-                                                      Colors.blue[100],
-                                                      Colors.green[100]
-                                                    ])),
-                                                child: ListTile(
-                                                  leading: Image.network(
-                                                      snapshot.data.docs[index]
-                                                          .data()["image"]),
-                                                  title: Text(
-                                                    snapshot.data.docs[index]
-                                                        .data()["name_marathi"],
-                                                    style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.w700),
+                                                child: Card(
+                                                  elevation: 10.0,
+                                                  child: Row(
+                                                    children: [
+                                                      Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(5.0),
+                                                        child: ClipRRect(
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(
+                                                                      5.0),
+                                                          child: Image.network(
+                                                              snapshot.data
+                                                                      .docs[index]
+                                                                      .data()[
+                                                                  "image"]),
+                                                        ),
+                                                      ),
+                                                      Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                    .only(
+                                                                left: 20.0),
+                                                        child: Text(
+                                                          snapshot.data
+                                                                  .docs[index]
+                                                                  .data()[
+                                                              "name_marathi"],
+                                                          style: TextStyle(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w700),
+                                                        ),
+                                                      )
+                                                    ],
                                                   ),
                                                 )),
                                           ),
@@ -212,34 +207,41 @@ class _favouriteAarti_viewState extends State<favouriteAarti_view> {
                                         );
                                       },
                                     );
-                            },
-                          );
-                        }
-                        return StreamBuilder<QuerySnapshot>(
-                          stream: (aartiName != "" && aartiName != null)
-                              ? FirebaseFirestore.instance
-                                  .collection("FavouriteAartis")
-                                  .doc(userId)
-                                  .collection("FavouriteAartis")
-                                  .orderBy("name_english")
-                                  .startAt([aartiName]).endAt(
-                                      [aartiName + "\uf88f"]).snapshots()
-                              : FirebaseFirestore.instance
-                                  .collection("FavouriteAartis")
-                                  .doc(userId)
-                                  .collection("FavouriteAartis")
-                                  .snapshots(),
-                          builder: (context, snapshot) {
-                            if (snapshot.data.docs.length == 0) {
-                              return Center(
-                                child: Text(
-                                  "Sorry Aarti Not Found",
-                                  style: TextStyle(
-                                      fontSize: 20.0,
-                                      fontWeight: FontWeight.w700),
-                                ),
-                              );
                             }
+                          },
+                        );
+                      }
+                      return StreamBuilder<QuerySnapshot>(
+                        stream: (aartiName != "" && aartiName != null)
+                            ? (aartiName
+                                    .toLowerCase()
+                                    .startsWith(new RegExp('[a-z]')))
+                                ? FirebaseFirestore.instance
+                                    .collection("Aartis")
+                                    .orderBy("name_english")
+                                    .startAt([aartiName]).endAt(
+                                        [aartiName + "\uf88f"]).snapshots()
+                                : FirebaseFirestore.instance
+                                    .collection("Aartis")
+                                    .orderBy("name")
+                                    .startAt([aartiName]).endAt(
+                                        [aartiName + "\uf88f"]).snapshots()
+                            : FirebaseFirestore.instance
+                                .collection("FavouriteAartis")
+                                .doc(userId)
+                                .collection("FavouriteAartis")
+                                .snapshots(),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData || snapshot.data.docs.isEmpty) {
+                            return Center(
+                              child: Text(
+                                "Sorry Aarti Not Found",
+                                style: TextStyle(
+                                    fontSize: 20.0,
+                                    fontWeight: FontWeight.w700),
+                              ),
+                            );
+                          } else {
                             return (snapshot.connectionState ==
                                     ConnectionState.waiting)
                                 ? Center(child: CircularProgressIndicator())
@@ -251,28 +253,47 @@ class _favouriteAarti_viewState extends State<favouriteAarti_view> {
                                       //     snapshot.data.docs[index];
                                       return InkWell(
                                         child: Padding(
-                                          padding: const EdgeInsets.all(10.0),
+                                          padding: const EdgeInsets.only(
+                                              top: 10.0,
+                                              left: 10.0,
+                                              right: 10.0),
                                           child: Container(
                                               height: 60.0,
-                                              decoration: BoxDecoration(
-                                                  gradient: LinearGradient(
-                                                      begin: Alignment.topLeft,
-                                                      end:
-                                                          Alignment.bottomRight,
-                                                      colors: [
-                                                    Colors.blue[100],
-                                                    Colors.green[100]
-                                                  ])),
-                                              child: ListTile(
-                                                leading: Image.network(snapshot
-                                                    .data.docs[index]
-                                                    .data()["image"]),
-                                                title: Text(
-                                                  snapshot.data.docs[index]
-                                                      .data()["name_marathi"],
-                                                  style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w700),
+                                              child: Card(
+                                                elevation: 10.0,
+                                                child: Row(
+                                                  children: [
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              5.0),
+                                                      child: ClipRRect(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(5.0),
+                                                        child: Image.network(
+                                                            snapshot.data
+                                                                    .docs[index]
+                                                                    .data()[
+                                                                "image"]),
+                                                      ),
+                                                    ),
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                              left: 20.0),
+                                                      child: Text(
+                                                        snapshot.data
+                                                                .docs[index]
+                                                                .data()[
+                                                            "name_marathi"],
+                                                        style: TextStyle(
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .w700),
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
                                               )),
                                         ),
@@ -290,14 +311,14 @@ class _favouriteAarti_viewState extends State<favouriteAarti_view> {
                                       );
                                     },
                                   );
-                          },
-                        );
-                      }
-                      return Center(
-                        child: CircularProgressIndicator(),
+                          }
+                        },
                       );
-                    })),
-          ),
-        ));
+                    }
+                    return Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }))),
+    );
   }
 }

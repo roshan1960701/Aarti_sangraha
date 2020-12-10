@@ -1,3 +1,4 @@
+import 'package:aarti_sangraha/utilities.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/painting.dart';
@@ -5,7 +6,6 @@ import 'package:share/share.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:audioplayers/audio_cache.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:connectivity/connectivity.dart';
 
 class specificAarti_view extends StatefulWidget {
   var id;
@@ -17,7 +17,7 @@ class specificAarti_view extends StatefulWidget {
 
 class _specificAarti_viewState extends State<specificAarti_view> {
   var id;
-
+  utilities util = new utilities();
   bool isPlaying;
   _specificAarti_viewState(this.id);
   final fireStoreInstance = FirebaseFirestore.instance;
@@ -31,7 +31,6 @@ class _specificAarti_viewState extends State<specificAarti_view> {
   AudioCache audioCache;
   String localFilePath;
   String aarti = " ", image, mp3, name_marathi = " ", name_english;
-
   bool isFavourite = false;
   Icon favouriteIcon = Icon(
     Icons.play_arrow,
@@ -39,19 +38,17 @@ class _specificAarti_viewState extends State<specificAarti_view> {
   );
   int iconTaped = 0;
 
-  List aartis = new List();
-
   @override
   void initState() {
     // TODO: implement initState
 
-    checkConnectivity();
-    super.initState();
+    Future.delayed(Duration.zero, () {
+      util.checkConnectivity(context);
+    });
     getSpecificAarti();
-    //getSpAart();
-    // print(utilities.FavouriteAartis);
     initPlayer();
     checkIsFavourite();
+    super.initState();
   }
 
   addToFavouriteFirestore() async {
@@ -81,28 +78,6 @@ class _specificAarti_viewState extends State<specificAarti_view> {
         'aarti': aarti,
         'name_english': name_english,
       });
-    }
-  }
-
-  checkConnectivity() async {
-    var result = await Connectivity().checkConnectivity();
-
-    if (result == ConnectivityResult.none) {
-      showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text("No Internet Connection!!!"),
-              content: Text("Please connect Internet"),
-              actions: [
-                FlatButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: Text("Close"))
-              ],
-            );
-          });
     }
   }
 
@@ -155,10 +130,6 @@ class _specificAarti_viewState extends State<specificAarti_view> {
       SharedPreferences sharedPreferences =
           await SharedPreferences.getInstance();
       var aarti = sharedPreferences.getStringList("Fav");
-      print(aarti);
-      // print(aarti);
-      // aarti.add(id);
-      // sharedPreferences.setStringList("Fav", aarti);
 
       if (aarti.contains(id)) {
         aarti.remove(id);
@@ -257,7 +228,9 @@ class _specificAarti_viewState extends State<specificAarti_view> {
                       ),
                 onPressed: () async {
                   if (isPlaying) {
-                    checkConnectivity();
+                    Future.delayed(Duration.zero, () {
+                      util.checkConnectivity(context);
+                    });
                     await advancedPlayer.play('$mp3');
                     isPlaying = false;
                   } else if (!isPlaying) {
@@ -266,23 +239,6 @@ class _specificAarti_viewState extends State<specificAarti_view> {
                   }
                   setState(() {});
                 },
-                // IconButton(
-                //     onPressed: () => advancedPlayer.pause(),
-                //     icon: Icon(
-                //       Icons.pause,
-                //       size: 25.0,
-                //       color: Colors.pink[900],
-                //     )),
-                // IconButton(
-                //     onPressed: () {
-                //       advancedPlayer.stop();
-                //       //_position = Duration(minutes: 0, seconds: 0);
-                //     },
-                //     icon: Icon(
-                //       Icons.stop,
-                //       size: 25.0,
-                //       color: Colors.pink[900],
-                //     ))
               )
             ],
           ),
@@ -323,15 +279,6 @@ class _specificAarti_viewState extends State<specificAarti_view> {
         });
   }
 
-  Future<QuerySnapshot> getImages() async {
-    // DocumentReference docRef = firestoreInstance.collection("Aartis").get();
-    fireStoreInstance.collection("Aartis").doc(id).get().then((value) => {});
-    // var result = firestoreInstance.collection("Aartis").doc(id).get();
-    // if (result != null) {
-    //   print(result);
-    // }
-  }
-
   Future<QuerySnapshot> getSpecificAarti() async {
     if (QuerySnapshot != null) {
       fireStoreInstance.collection("Aartis").doc(id).get().then((value) {
@@ -346,10 +293,6 @@ class _specificAarti_viewState extends State<specificAarti_view> {
         }
       });
     }
-    // var result = firestoreInstance.collection("Aartis").doc(id).get();
-    // if (result != null) {
-    //   print(result);
-    // }
   }
 
   @override
@@ -359,102 +302,106 @@ class _specificAarti_viewState extends State<specificAarti_view> {
         advancedPlayer.stop();
         Navigator.pop(context);
       },
-      child: Scaffold(
-        backgroundColor: Colors.grey[200],
-        resizeToAvoidBottomPadding: false,
-        body: SafeArea(
-            child: SingleChildScrollView(
-          scrollDirection: Axis.vertical,
-          child: Column(
-            children: [
-              Padding(
-                padding: EdgeInsets.all(10.0),
-                child: Align(
-                  alignment: Alignment.topLeft,
-                  child: IconButton(
-                      icon: Icon(
-                        Icons.arrow_back_ios,
-                        color: Colors.blue,
-                        size: 24.0,
-                      ),
-                      onPressed: () {
-                        advancedPlayer.stop();
-                        Navigator.pop(context);
-                      }),
-                ),
-              ),
-              Container(
-                  width: 130.0,
-                  height: 130.0,
-                  child: ClipRRect(
-                      borderRadius: BorderRadius.all(Radius.circular(10.0)),
-                      child: Image.network('$image'))),
-              Padding(
-                padding: EdgeInsets.symmetric(vertical: 10.0),
-                child: Text(
-                  '$name_marathi',
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 25.0),
-                ),
-              ),
-              Container(
-                  width: MediaQuery.of(context).size.width * 0.9,
-                  child: Text(
-                    '$aarti',
-                    style:
-                        TextStyle(fontSize: 18.0, fontWeight: FontWeight.w500),
-                  )),
-              Padding(
-                  padding: const EdgeInsets.only(
-                    top: 30.0,
+      child: SafeArea(
+        child: Scaffold(
+          backgroundColor: Colors.grey[200],
+          resizeToAvoidBottomPadding: false,
+          body: SingleChildScrollView(
+            scrollDirection: Axis.vertical,
+            child: Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.all(10.0),
+                  child: Align(
+                    alignment: Alignment.topLeft,
+                    child: IconButton(
+                        icon: Icon(
+                          Icons.arrow_back_ios,
+                          color: Color(0xFFF06701),
+                          size: 24.0,
+                        ),
+                        onPressed: () {
+                          advancedPlayer.stop();
+                          Navigator.pop(context);
+                        }),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      FloatingActionButton(
-                        backgroundColor: Colors.green,
-                        onPressed: () async {
-                          Share.share('To listen this Aarti ' +
-                              '$name_marathi' +
-                              ' Download the Mp3 File\n' +
-                              '$mp3');
-                        },
-                        child: IconButton(
-                          tooltip: "Click to share",
-                          icon: Icon(
-                            Icons.share,
-                            color: Colors.white,
+                ),
+                Container(
+                    width: 130.0,
+                    height: 130.0,
+                    child: ClipRRect(
+                        borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                        child: Image.network('$image'))),
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 10.0),
+                  child: Text(
+                    '$name_marathi',
+                    style:
+                        TextStyle(fontWeight: FontWeight.w700, fontSize: 25.0),
+                  ),
+                ),
+                Container(
+                    width: MediaQuery.of(context).size.width * 0.9,
+                    child: Text(
+                      '$aarti',
+                      style: TextStyle(
+                          fontSize: 18.0, fontWeight: FontWeight.w500),
+                    )),
+                Padding(
+                    padding: const EdgeInsets.only(
+                      top: 30.0,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        FloatingActionButton(
+                          backgroundColor: Colors.green,
+                          onPressed: () async {
+                            Share.share('To listen this Aarti ' +
+                                '$name_marathi' +
+                                ' Download the App from PlayStore \n'); //+
+                            // '$mp3');
+                          },
+                          child: IconButton(
+                            tooltip: "Click to share",
+                            icon: Icon(
+                              Icons.share,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
-                      ),
-                      SizedBox(
-                        width: 40.0,
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          isFavourite ? Icons.favorite : Icons.favorite_border,
-                          color: isFavourite ? Colors.red : null,
+                        SizedBox(
+                          width: 40.0,
                         ),
-                        onPressed: () async {
-                          if (isFavourite) {
-                            // savedWords.remove(word);
-                            await removeFromFavouriteFirestore();
-                            isFavourite = false;
-                          } else {
-                            await addToFavouriteFirestore();
-                            isFavourite = true;
-                          }
-                          setState(() {});
-                        },
-                      )
-                    ],
-                  )),
-              Padding(
-                padding: EdgeInsets.only(top: 20.0),
-                child: LocalAudio(),
-              )
-            ],
+                        IconButton(
+                          icon: Icon(
+                            isFavourite
+                                ? Icons.favorite
+                                : Icons.favorite_border,
+                            color: isFavourite ? Colors.red : null,
+                          ),
+                          onPressed: () async {
+                            if (isFavourite) {
+                              // savedWords.remove(word);
+                              await removeFromFavouriteFirestore();
+                              isFavourite = false;
+                            } else {
+                              await addToFavouriteFirestore();
+                              isFavourite = true;
+                            }
+                            setState(() {});
+                          },
+                        )
+                      ],
+                    )),
+                Padding(
+                  padding: EdgeInsets.only(top: 20.0),
+                  child: LocalAudio(),
+                )
+              ],
+            ),
           ),
-        )),
+        ),
       ),
     );
   }

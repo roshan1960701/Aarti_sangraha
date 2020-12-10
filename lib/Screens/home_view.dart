@@ -1,9 +1,13 @@
 import 'package:aarti_sangraha/Screens/aartList_view.dart';
 import 'package:aarti_sangraha/drawer.dart';
+import 'package:aarti_sangraha/utilities.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:connectivity/connectivity.dart';
 import 'package:aarti_sangraha/Screens/specificAarti_view.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:translator/translator.dart';
+import 'dart:io';
+import 'package:rate_my_app/rate_my_app.dart';
 
 class home_view extends StatefulWidget {
   home_view({Key key}) : super(key: key);
@@ -13,17 +17,166 @@ class home_view extends StatefulWidget {
 }
 
 class _home_viewState extends State<home_view> {
-  final firestoreInstance = FirebaseFirestore.instance;
+  RateMyApp _rateMyApp = RateMyApp(
+    preferencesPrefix: 'rateMyApp_',
+    minDays: 3,
+    minLaunches: 7,
+    remindDays: 2,
+    remindLaunches: 5,
+    // appStoreIdentifier: '',
+    // googlePlayIdentifier: '',
+  );
 
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+  utilities util = new utilities();
+  final fireStoreInstance = FirebaseFirestore.instance;
+  final FirebaseMessaging firebaseMessaging = FirebaseMessaging();
+  String token = " ";
+  final translator = GoogleTranslator();
   @override
   void initState() {
     // TODO: implement initState
+    getToken();
+
+    Future.delayed(Duration.zero, () {
+      util.checkConnectivity(context);
+    });
+    util.statusBarVisibility();
+    _rateMyApp.init().then((_) {
+      // TODO: Comment out this if statement to test rating dialog (Remember to uncomment)
+      // if (_rateMyApp.shouldOpenDialog) {
+      _rateMyApp.showStarRateDialog(
+        context,
+        title: 'Ratings!!!',
+        message: 'Please leave a rating!',
+        actionsBuilder: (context, stars) {
+          return [
+            FlatButton(
+              child: Text('Ok'),
+              onPressed: () {
+                if (stars != null) {
+                  // _rateMyApp.doNotOpenAgain = true;
+                  _rateMyApp.save().then((v) => Navigator.pop(context));
+
+                  if (stars <= 3) {
+                    print('Navigate to Contact Us Screen');
+                  } else if (stars <= 5) {
+                    print('Leave a Review Dialog');
+                    // showDialog(...);
+                  }
+                } else {
+                  Navigator.pop(context);
+                }
+              },
+            ),
+          ];
+        },
+        dialogStyle: DialogStyle(
+          titleAlign: TextAlign.center,
+          messageAlign: TextAlign.center,
+          messagePadding: EdgeInsets.only(bottom: 20.0),
+        ),
+        starRatingOptions: StarRatingOptions(),
+      );
+      // }
+    });
     super.initState();
+  }
+
+  getToken() async {
+    if (Platform.isIOS) {
+      firebaseMessaging.requestNotificationPermissions(
+          IosNotificationSettings(sound: true, badge: true, alert: true));
+      firebaseMessaging.onIosSettingsRegistered
+          .listen((IosNotificationSettings settings) {
+        print("Settings registered: $settings");
+      });
+    }
+    firebaseMessaging.getToken().then((value) {
+      token = value.toString();
+      print("Token: $token");
+    }).catchError((onError) {
+      print("Exception: $onError");
+    });
+
+    firebaseMessaging.configure(
+      onMessage: (Map<String, dynamic> message) async {
+        print("Message: $message");
+      },
+      onResume: (Map<String, dynamic> message) async {
+        _navigateToItemDetail(message);
+        print("Resume: $message");
+      },
+      onLaunch: (Map<String, dynamic> message) async {
+        _navigateToItemDetail(message);
+        print("Launch: $message");
+      },
+    );
+    firebaseMessaging.subscribeToTopic("AartiSangraha");
+  }
+
+  void _navigateToItemDetail(Map<String, dynamic> message) {
+    // Clear away dialogs
+    var notificationData = message['data'];
+    var id = notificationData['id'];
+    print(id);
+    Navigator.push(context,
+        MaterialPageRoute(builder: (context) => specificAarti_view(id: id)));
+  }
+
+  // getSearchAarti() async {
+  //   FirebaseFirestore.instance.collection('Aartis').where().get().then((value) {
+  //     value.docs.forEach((element) {
+  //       print(element.data());
+  //     });
+  //   });
+  // }
+
+  navigateSpecificAart() async {}
+
+  Widget customAppBar() {
+    return PreferredSize(
+      preferredSize: Size(double.infinity, util.calculateHY(56, context)),
+      child: SafeArea(
+        child: Container(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                  icon: Icon(
+                    Icons.menu_rounded,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {
+                    _scaffoldKey.currentState.openDrawer();
+                  }),
+              IconButton(
+                  icon: Icon(
+                    Icons.search,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {
+                    showSearch(
+                      context: context,
+                      delegate: aartiSearchDelegate(),
+                    );
+                  }),
+            ],
+          ),
+          decoration: BoxDecoration(
+              shape: BoxShape.rectangle,
+              borderRadius:
+                  BorderRadius.only(bottomLeft: Radius.circular(20.0)),
+              gradient: LinearGradient(
+                  colors: [Color(0xFFF06701), Color(0xFFFF8804)])),
+        ),
+      ),
+    );
   }
 
   Future<QuerySnapshot> getArtiSangraha() async {
     if (QuerySnapshot != null) {
-      return firestoreInstance.collection("AartiSangraha").get();
+      return fireStoreInstance.collection("AartiSangraha").get();
     } else {
       return showDialog(
           context: context,
@@ -35,74 +188,39 @@ class _home_viewState extends State<home_view> {
     }
   }
 
-  checkConnectivity() async {
-    var result = await Connectivity().checkConnectivity();
-
-    if (result == ConnectivityResult.none) {
-      showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text("No Internet Connection!!!"),
-              content: Text("Please connect Internet"),
-              actions: [
-                FlatButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: Text("Close"))
-              ],
-            );
-          });
-    }
-  }
-
-  // Future<QuerySnapshot> getAartidSangrahaID() async {
-  //   firestoreInstance.collection("AartiSangraha").get().then((querySnapshot) {
-  //     querySnapshot.docs.forEach((result) {
-  //       AartiSangrahaId.add(result.id);
-  //       print(result.id);
-  //       //print(result.data());
-  //     });
-  //   });
-  // }
-
-  // void insertData() async {
-  //   Map<String, dynamic> row = {
-  //     databaseHelper.columnGodName: "Ganehsa",
-  //   };
-  //   final id = await dbhelper.insertGod(row);
-  //   print(id);
-  // }
-
-  // void queryall() async {
-  //   var allrows = await dbhelper.allGodQuery();
-  //   allrows.forEach((row) {
-  //     print(row);
-  //   });
-  // }
-
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
+      onWillPop: () async {
+        return showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text("Exit"),
+                content: Text("Are you want Exit?"),
+                actions: [
+                  FlatButton(
+                      onPressed: () {
+                        Navigator.of(context).pop(true);
+                      },
+                      child: Text(
+                        "Exit",
+                        style: TextStyle(color: Color(0xFFF06701)),
+                      )),
+                  FlatButton(
+                      onPressed: () {
+                        Navigator.of(context).pop(false);
+                      },
+                      child: Text("Cancel",
+                          style: TextStyle(color: Color(0xFFF06701)))),
+                ],
+              );
+            });
+      },
       child: SafeArea(
         child: Scaffold(
-          appBar: AppBar(
-            actions: [
-              Column(
-                children: [
-                  IconButton(
-                      icon: Icon(Icons.search),
-                      onPressed: () {
-                        showSearch(
-                          context: context,
-                          delegate: aartiSearchDelegate(),
-                        );
-                      })
-                ],
-              )
-            ],
-          ),
+          key: _scaffoldKey,
+          appBar: customAppBar(),
           drawer: drawer(),
           body: Padding(
             padding: EdgeInsets.all(20.0),
@@ -288,15 +406,7 @@ class aartiSearchDelegate extends SearchDelegate {
   Widget buildResults(BuildContext context) {
     // TODO: implement buildResults
     return Center(
-      child: Container(
-          height: 100.0,
-          width: 100.0,
-          child: Card(
-            color: Colors.red,
-            child: Center(
-              child: Text(query),
-            ),
-          )),
+      child: Container(),
     );
   }
 
@@ -306,61 +416,78 @@ class aartiSearchDelegate extends SearchDelegate {
 
     return StreamBuilder(
         stream: (query != "" && query != null)
-            ? FirebaseFirestore.instance
-                .collection('Aartis')
-                .orderBy("name_english")
-                .startAt([query]).endAt([query + "\uf88f"]).snapshots()
+            ? (query.toLowerCase().startsWith(new RegExp('[a-z]')))
+                ? FirebaseFirestore.instance
+                    .collection('Aartis')
+                    .orderBy("name_english")
+                    .startAt([query.toLowerCase()]).endAt(
+                        [query.toLowerCase() + "\uf88f"]).snapshots()
+                : FirebaseFirestore.instance
+                    .collection('Aartis')
+                    .orderBy("name")
+                    .startAt([query]).endAt([query + "\uf88f"]).snapshots()
             : FirebaseFirestore.instance.collection("Aartis").snapshots(),
         builder: (context, snapshot) {
-          if (snapshot.data.docs.length == 0) {
+          if (!snapshot.hasData || snapshot.data.docs.isEmpty) {
             return Center(
               child: Text(
                 "Sorry Aarti Not Found",
                 style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w700),
               ),
             );
+          } else {
+            return (snapshot.connectionState == ConnectionState.waiting)
+                ? Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    itemCount: snapshot.data.docs.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return InkWell(
+                        child: Padding(
+                          padding: const EdgeInsets.only(
+                              top: 10.0, left: 10.0, right: 10.0),
+                          child: Container(
+                              height: 60.0,
+                              child: Card(
+                                child: Row(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.all(5.0),
+                                      child: ClipRRect(
+                                        borderRadius:
+                                            BorderRadius.circular(5.0),
+                                        child: Image.network(
+                                          snapshot.data.docs[index]
+                                              .data()["image"],
+                                          width: 45.0,
+                                        ),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding:
+                                          const EdgeInsets.only(left: 20.0),
+                                      child: Text(
+                                        snapshot.data.docs[index]
+                                            .data()["name_marathi"],
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.w700),
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              )),
+                        ),
+                        onTap: () async {
+                          var docID = snapshot.data.docs[index].id;
+                          // print(docID);
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      specificAarti_view(id: docID)));
+                        },
+                      );
+                    });
           }
-          return (snapshot.connectionState == ConnectionState.waiting)
-              ? Center(child: CircularProgressIndicator())
-              : ListView.builder(
-                  itemCount: snapshot.data.docs.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    return InkWell(
-                      child: Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Container(
-                            height: 60.0,
-                            decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [
-                                  Colors.blue[100],
-                                  Colors.green[100]
-                                ])),
-                            child: ListTile(
-                              leading: Image.network(
-                                snapshot.data.docs[index].data()["image"],
-                                fit: BoxFit.fill,
-                              ),
-                              title: Text(
-                                snapshot.data.docs[index]
-                                    .data()["name_marathi"],
-                                style: TextStyle(fontWeight: FontWeight.w700),
-                              ),
-                            )),
-                      ),
-                      onTap: () async {
-                        var docID = snapshot.data.docs[index].id;
-                        // print(docID);
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    specificAarti_view(id: docID)));
-                      },
-                    );
-                  });
         });
     throw UnimplementedError();
   }

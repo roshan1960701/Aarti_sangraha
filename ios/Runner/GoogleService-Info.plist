@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>1059733943339-iv3ibm7j47a1q00fo9vsjs6k04gv71te.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.1059733943339-iv3ibm7j47a1q00fo9vsjs6k04gv71te</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>1059733943339-h067acms8rc3i8tpmgfila6q3r5cqv2s.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyAgWI4LVT_MC0Zip1--JOo0WEZUIO0q298</string>
+	<key>GCM_SENDER_ID</key>
+	<string>1059733943339</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.aartiSangraha</string>
+	<key>PROJECT_ID</key>
+	<string>aarti-sangraha-c85a2</string>
+	<key>STORAGE_BUCKET</key>
+	<string>aarti-sangraha-c85a2.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:1059733943339:ios:f71b253271fbf08e62666e</string>
+	<key>DATABASE_URL</key>
+	<string>https://aarti-sangraha-c85a2.firebaseio.com</string>
+</dict>
+</plist>

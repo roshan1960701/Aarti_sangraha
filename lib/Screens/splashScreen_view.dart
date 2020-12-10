@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'package:aarti_sangraha/Screens/home_view.dart';
-import 'package:aarti_sangraha/Screens/registration_view.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:video_player/video_player.dart';
 
 class splashScreen_view extends StatefulWidget {
   splashScreen_view({Key key}) : super(key: key);
@@ -12,81 +11,66 @@ class splashScreen_view extends StatefulWidget {
 }
 
 class _splashScreen_viewState extends State<splashScreen_view> {
-  completed() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool firstTime = (prefs.getBool('first_time') ?? false);
-
-    var _duration = new Duration(seconds: 3);
-
-    if (firstTime) {
-      // Not first time
-      return new Timer(_duration, navigationPageHome);
-    } else {
-      // First time
-      prefs.setBool('first_time', true);
-      return new Timer(_duration, navigationPageReg);
-    }
-    // SharedPreferences prefs = await SharedPreferences.getInstance();
-    // bool _seen = (prefs.getBool('seen') ?? false);
-    //
-    // if (_seen) {
-    //   Navigator.of(context).pushReplacement(
-    //       new MaterialPageRoute(builder: (context) => new home_view()));
-    // } else {
-    //   await prefs.setBool('seen', true);
-    //   Navigator.of(context).pushReplacement(
-    //       new MaterialPageRoute(builder: (context) => new registration_view()));
-    // }
-    Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => registration_view()));
-  }
-
-  void navigationPageHome() async {
-    Navigator.of(context).pushReplacement(
-        new MaterialPageRoute(builder: (context) => new home_view()));
-  }
-
-  void navigationPageReg() async {
-    Navigator.of(context).pushReplacement(
-        new MaterialPageRoute(builder: (context) => new registration_view()));
-  }
+  VideoPlayerController controller;
+  bool startedPlaying = false;
 
   @override
   void initState() {
+    controller = VideoPlayerController.asset("asset/video/HeyCloudy.mp4");
+    started();
+    controller.addListener(() {
+      if (startedPlaying && !controller.value.isPlaying) {
+        Navigator.pushReplacement(
+            context, MaterialPageRoute(builder: (context) => home_view()));
+      }
+    });
     super.initState();
-    completed();
-    // Timer(Duration(seconds: 2), completed);
   }
 
-  // Future checkFirstSeen() async {
-  //   SharedPreferences prefs = await SharedPreferences.getInstance();
-  //   bool _seen = (prefs.getBool('seen') ?? false);
-  //
-  //   if (_seen) {
-  //     Navigator.of(context).pushReplacement(
-  //         new MaterialPageRoute(builder: (context) => new splashScreen_view()));
-  //   } else {
-  //     await prefs.setBool('seen', true);
-  //     Navigator.of(context).pushReplacement(
-  //         new MaterialPageRoute(builder: (context) => new onboarding_view()));
-  //   }
-  // }
+  Future<bool> started() async {
+    await controller.initialize();
+    await controller.play();
+    startedPlaying = true;
+    return true;
+  }
 
   @override
   Widget build(BuildContext context) {
     // checkFirstSeen();
-    return Scaffold(
-      body: Center(
-        child: Card(
-          elevation: 20.0,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(10.0),
-            child: Image.asset(
-              "lib/asset/logo/logo.png",
-            ),
+    return SafeArea(
+        child: Scaffold(
+            body: Container(
+      width: MediaQuery.of(context).size.width,
+      height: MediaQuery.of(context).size.height,
+      decoration: BoxDecoration(
+          gradient:
+              LinearGradient(colors: [Color(0xFF35c1f0), Color(0xFFbce7f5)])
+          /*image: DecorationImage(
+          image: new ExactAssetImage("asset/logo/launch.jpg"),
+        ),*/
           ),
-        ),
-      ),
-    );
+      child: VideoPlayer(controller),
+    )
+
+            /*Stack(
+        children: [
+          Image.asset(
+            "asset/logo/launch.jpg",
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height,
+            fit: BoxFit.cover,
+          ),
+          Container(
+            width: double.infinity,
+            height: double.infinity,
+            child: Stack(
+              children: [
+                VideoPlayer(controller),
+              ],
+            ),
+          )
+        ],
+      ),*/
+            ));
   }
 }

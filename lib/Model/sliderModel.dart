@@ -38,24 +38,26 @@ List<SliderModel> getSlides() {
 
   //1
   sliderModel.setDesc("");
-  sliderModel.setTitle("|| वक्रतुंड महाकाय सूर्य कोटी समप्रभ, निर्विग्नहं कुरु मे दैव सर्व कार्येषु सर्वदा ||");
-  sliderModel.setImageAssetPath("lib/asset/images/ganesha.png");
+  sliderModel.setTitle(
+      "|| वक्रतुंड महाकाय सूर्य कोटी समप्रभ, निर्विग्नहं कुरु मे दैव सर्व कार्येषु सर्वदा ||");
+  sliderModel.setImageAssetPath("asset/images/ganesha.png");
   slides.add(sliderModel);
 
   sliderModel = new SliderModel();
 
   //2
   sliderModel.setDesc("");
-  sliderModel.setTitle("|| जय श्री कृष्ण जो आहे माखन चोर, जो आहे मुरलीधर, तो च आहे आपल्या सर्वांचा तारणहार ||");
-  sliderModel.setImageAssetPath("lib/asset/images/krishna.png");
+  sliderModel.setTitle(
+      "|| जय श्री कृष्ण जो आहे माखन चोर, जो आहे मुरलीधर, तो च आहे आपल्या सर्वांचा तारणहार ||");
+  sliderModel.setImageAssetPath("asset/images/krishna.png");
   slides.add(sliderModel);
 
   sliderModel = new SliderModel();
 
   //3
   sliderModel.setDesc("");
-  sliderModel.setTitle("|| ॐ नमः शिवाय ||" );
-  sliderModel.setImageAssetPath("lib/asset/images/shiva.png");
+  sliderModel.setTitle("|| ॐ नमः शिवाय ||");
+  sliderModel.setImageAssetPath("asset/images/shiva.png");
   slides.add(sliderModel);
 
   sliderModel = new SliderModel();

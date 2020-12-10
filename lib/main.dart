@@ -1,15 +1,21 @@
 import 'package:aarti_sangraha/Screens/home_view.dart';
 import 'package:aarti_sangraha/Screens/onboarding_view.dart';
-import 'package:aarti_sangraha/Screens/registration_view.dart';
+import 'package:aarti_sangraha/Screens/splashScreen_view.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/services.dart';
 
 Widget defaultWidget;
 
 void main() async {
+  splashScreen_view screen_view = new splashScreen_view();
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+  ));
+  SystemChrome.setEnabledSystemUIOverlays(SystemUiOverlay.values);
   SharedPreferences prefs = await SharedPreferences.getInstance();
   var userId = prefs.getString('userId');
 
@@ -23,34 +29,7 @@ class myApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Aarti Sangraha',
-      home: defaultWidget,
+      home: splashScreen_view(),
     );
   }
 }
-
-// class homePage extends StatefulWidget {
-//   @override
-//   _homePageState createState() => _homePageState();
-// }
-//
-// class _homePageState extends State<homePage> {
-//   Future checkFirstSeen() async {
-//     SharedPreferences prefs = await SharedPreferences.getInstance();
-//     bool _seen = (prefs.getBool('seen') ?? false);
-//
-//     if (_seen) {
-//       Navigator.of(context).pushReplacement(
-//           new MaterialPageRoute(builder: (context) => new splashScreen_view()));
-//     } else {
-//       await prefs.setBool('seen', true);
-//       Navigator.of(context).pushReplacement(
-//           new MaterialPageRoute(builder: (context) => new onboarding_view()));
-//     }
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     checkFirstSeen();
-//     return Scaffold();
-//   }
-// }
