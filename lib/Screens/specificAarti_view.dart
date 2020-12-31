@@ -6,6 +6,7 @@ import 'package:share/share.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:audioplayers/audio_cache.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 
 class specificAarti_view extends StatefulWidget {
   var id;
@@ -45,6 +46,7 @@ class _specificAarti_viewState extends State<specificAarti_view> {
     Future.delayed(Duration.zero, () {
       util.checkConnectivity(context);
     });
+    FirebaseAnalytics().setCurrentScreen(screenName: "SpecificAartiScreen");
     getSpecificAarti();
     initPlayer();
     checkIsFavourite();
@@ -232,6 +234,9 @@ class _specificAarti_viewState extends State<specificAarti_view> {
                       util.checkConnectivity(context);
                     });
                     await advancedPlayer.play('$mp3');
+                    FirebaseAnalytics().setUserProperty(
+                        name: "Aarti_played", value: "$name_marathi");
+                    FirebaseAnalytics().logEvent(name: 'Aarti_played',parameters:{"name":name_marathi});
                     isPlaying = false;
                   } else if (!isPlaying) {
                     await advancedPlayer.pause();

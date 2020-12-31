@@ -51,6 +51,13 @@ dependencies:
   flutter_rating_bar: ^3.2.0+1
   rate_my_app: ^0.7.2
   in_app_review: ^1.0.3
+  awesome_notifications: ^0.0.5+2
+  giffy_dialog: ^1.8.0
+  notification_banner: ^0.1.0
+  flutter_local_notifications: ^3.0.2
+  firebase_analytics: ^6.3.0
+
+
 
 dev_dependencies:
   flutter_test:

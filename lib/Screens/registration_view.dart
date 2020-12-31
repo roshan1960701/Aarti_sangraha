@@ -11,6 +11,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 
 class registration_view extends StatefulWidget {
   registration_view({Key key}) : super(key: key);
@@ -43,6 +44,7 @@ class _registration_viewState extends State<registration_view> {
     Future.delayed(Duration.zero, () {
       util.checkConnectivity(context);
     });
+    FirebaseAnalytics().setCurrentScreen(screenName: "RegisterScreen");
     super.initState();
   }
 
@@ -239,6 +241,7 @@ class _registration_viewState extends State<registration_view> {
           "Inserted_date": insertedDate
         }).then((value) async {
           userID = value.id;
+          FirebaseAnalytics().setUserId(value.id);
           SharedPreferences googleUid = await SharedPreferences.getInstance();
           googleUid.setString('userId', userID);
         }).catchError((onError) async {
@@ -266,6 +269,7 @@ class _registration_viewState extends State<registration_view> {
           progressDialog.hide().whenComplete(() async {
             SharedPreferences googleUid = await SharedPreferences.getInstance();
             googleUid.setString('userId', userID);
+            FirebaseAnalytics().setUserId(userID);
             Navigator.of(context).pushReplacement(
                 MaterialPageRoute(builder: (context) => home_view()));
           });
@@ -294,6 +298,7 @@ class _registration_viewState extends State<registration_view> {
                   Future.delayed(Duration(seconds: 2)).then((value) {
                     progressDialog.hide().whenComplete(() async {
                       userID = userDocId;
+
                       SharedPreferences googleUid =
                           await SharedPreferences.getInstance();
                       googleUid.setString('userId', userID);

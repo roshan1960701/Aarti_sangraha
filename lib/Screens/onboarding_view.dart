@@ -1,5 +1,6 @@
 import 'package:aarti_sangraha/Model/sliderModel.dart';
 import 'package:aarti_sangraha/Screens/registration_view.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:aarti_sangraha/sliderTile.dart';
 
@@ -31,6 +32,7 @@ class _onboarding_viewState extends State<onboarding_view> {
   void initState() {
     mySLides = getSlides();
     controller = new PageController();
+    FirebaseAnalytics().setCurrentScreen(screenName: "OnboardingScreen");
     super.initState();
   }
 

@@ -8,6 +8,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:translator/translator.dart';
 import 'dart:io';
 import 'package:rate_my_app/rate_my_app.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 
 class home_view extends StatefulWidget {
   home_view({Key key}) : super(key: key);
@@ -37,6 +38,19 @@ class _home_viewState extends State<home_view> {
   void initState() {
     // TODO: implement initState
     getToken();
+    FirebaseAnalytics().setCurrentScreen(screenName: "HomeScreen");
+    FirebaseAnalytics().setUserProperty(
+        name: "Aarti_home", value: "Aarti_sangraha");
+    /*AwesomeNotifications awesomeNotifications = AwesomeNotifications();
+    awesomeNotifications.initialize('resource://drawable/res_app_icon',
+        [NotificationChannel(defaultColor: Colors.red)]);
+    awesomeNotifications.createNotification(
+        content: NotificationContent(
+      title: 'Emojis are awesome too!',
+      body: 'Testing',
+      bigPicture: 'https://tecnoblog.net/wp-content/uploads/2019/09/emoji.jpg',
+      backgroundColor: Colors.purpleAccent,
+    ));*/
 
     Future.delayed(Duration.zero, () {
       util.checkConnectivity(context);
@@ -98,7 +112,6 @@ class _home_viewState extends State<home_view> {
     }).catchError((onError) {
       print("Exception: $onError");
     });
-
     firebaseMessaging.configure(
       onMessage: (Map<String, dynamic> message) async {
         print("Message: $message");

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:aarti_sangraha/Screens/customNotification.dart';
 import 'package:aarti_sangraha/Screens/home_view.dart';
 import 'package:aarti_sangraha/Screens/listWheel.dart';
 import 'package:aarti_sangraha/Widgets/customRatings.dart';
@@ -8,6 +9,7 @@ import 'package:progress_dialog/progress_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:rate_my_app/rate_my_app.dart';
+import 'package:aarti_sangraha/Screens/backGeolocation.dart';
 
 class aboutUs_view extends StatefulWidget {
   aboutUs_view({Key key}) : super(key: key);
@@ -476,6 +478,64 @@ class _aboutUs_viewState extends State<aboutUs_view> {
                                     },
                                     child: Text(
                                       "ListWheel",
+                                      style: GoogleFonts.poppins(
+                                          color: Colors.white,
+                                          fontSize: 14.0,
+                                          fontStyle: FontStyle.normal),
+                                    )),
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(
+                                  top: 10.0, left: 20.0, right: 20.0),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.rectangle,
+                                  borderRadius: BorderRadius.circular(100.0),
+                                  gradient: LinearGradient(colors: [
+                                    Color(0xFFF06701),
+                                    Color(0xFFFF8804)
+                                  ]),
+                                ),
+                                child: FlatButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  customNotification()));
+                                    },
+                                    child: Text(
+                                      "Awesome Notification",
+                                      style: GoogleFonts.poppins(
+                                          color: Colors.white,
+                                          fontSize: 14.0,
+                                          fontStyle: FontStyle.normal),
+                                    )),
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(
+                                  top: 10.0, left: 20.0, right: 20.0),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.rectangle,
+                                  borderRadius: BorderRadius.circular(100.0),
+                                  gradient: LinearGradient(colors: [
+                                    Color(0xFFF06701),
+                                    Color(0xFFFF8804)
+                                  ]),
+                                ),
+                                child: FlatButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  backGeolocation()));
+                                    },
+                                    child: Text(
+                                      "Gelocation Notification",
                                       style: GoogleFonts.poppins(
                                           color: Colors.white,
                                           fontSize: 14.0,
