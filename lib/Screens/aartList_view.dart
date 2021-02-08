@@ -1,4 +1,5 @@
 import 'package:aarti_sangraha/Screens/specificAarti_view.dart';
+import 'package:aarti_sangraha/remoteConfigService.dart';
 import 'package:aarti_sangraha/utilities.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -26,6 +27,16 @@ class _aartiList_viewState extends State<aartiList_view> {
     color: Colors.white,
   );
   Widget cusAppBar = Text("");
+  remoteConfigService _remoteConfigService;
+  bool isLoading;
+
+  initializeRemoteConfig() async{
+    _remoteConfigService =  await remoteConfigService.getInstance();
+    await _remoteConfigService.initialize();
+    setState(() {
+      isLoading = false;
+    });
+  }
 
   @override
   void initState() {
@@ -33,6 +44,7 @@ class _aartiList_viewState extends State<aartiList_view> {
     Future.delayed(Duration.zero, () {
       util.checkConnectivity(context);
     });
+    initializeRemoteConfig();
     super.initState();
   }
 

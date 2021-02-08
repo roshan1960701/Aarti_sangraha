@@ -1,6 +1,8 @@
 import 'package:aarti_sangraha/Screens/aartList_view.dart';
 import 'package:aarti_sangraha/drawer.dart';
+import 'package:aarti_sangraha/remoteConfigService.dart';
 import 'package:aarti_sangraha/utilities.dart';
+import 'package:aarti_sangraha/videoDownload.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:aarti_sangraha/Screens/specificAarti_view.dart';
@@ -8,6 +10,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:translator/translator.dart';
 import 'dart:io';
 import 'package:rate_my_app/rate_my_app.dart';
+import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 
 class home_view extends StatefulWidget {
@@ -28,16 +31,34 @@ class _home_viewState extends State<home_view> {
     // googlePlayIdentifier: '',
   );
 
+  videoDownload _videoDownload = new videoDownload();
+
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
   utilities util = new utilities();
   final fireStoreInstance = FirebaseFirestore.instance;
   final FirebaseMessaging firebaseMessaging = FirebaseMessaging();
+ remoteConfigService _remoteConfigService;
   String token = " ";
   final translator = GoogleTranslator();
+  String splashScreenUrl,splashScreenDate;
+  bool isLoading;
+
+
+  initializeRemoteConfig() async{
+     _remoteConfigService =  await remoteConfigService.getInstance();
+     await _remoteConfigService.initialize();
+/*     setState(() {
+       isLoading = false;
+     });*/
+  }
   @override
   void initState() {
     // TODO: implement initState
+    initializeRemoteConfig();
     getToken();
+
+    //remoteService();
+
     FirebaseAnalytics().setCurrentScreen(screenName: "HomeScreen");
     FirebaseAnalytics().setUserProperty(
         name: "Aarti_home", value: "Aarti_sangraha");
@@ -55,8 +76,10 @@ class _home_viewState extends State<home_view> {
     Future.delayed(Duration.zero, () {
       util.checkConnectivity(context);
     });
+
     util.statusBarVisibility();
-    _rateMyApp.init().then((_) {
+
+    /*_rateMyApp.init().then((_) {
       // TODO: Comment out this if statement to test rating dialog (Remember to uncomment)
       // if (_rateMyApp.shouldOpenDialog) {
       _rateMyApp.showStarRateDialog(
@@ -93,9 +116,41 @@ class _home_viewState extends State<home_view> {
         starRatingOptions: StarRatingOptions(),
       );
       // }
-    });
+    });*/
     super.initState();
   }
+
+ /* remoteService() async{
+    WidgetsBinding.instance.addPostFrameCallback((_) async{
+      final RemoteConfig remoteConfig = await RemoteConfig.instance;
+      // remoteConfig.setConfigSettings(RemoteConfigSettings(
+      //   debugMode: true));
+
+      final defaults = <String, dynamic>{
+        'SplashScreenUrl':'',
+        'SplashScreenDate':''
+      };
+      remoteConfig.setDefaults(defaults);
+      setState(() {
+        splashScreenUrl = defaults['SplashScreenUrl'];
+        splashScreenDate = defaults['SplashScreenDate'];
+      });
+
+      await remoteConfig.fetch(expiration: const Duration(seconds:0),);
+      await remoteConfig.activateFetched().then((value){
+        print("Value: $value");
+      });
+
+      setState(() {
+        splashScreenUrl = remoteConfig.getString('SplashScreenUrl');
+        splashScreenDate = remoteConfig.getString('SplashScreenDate');
+        _videoDownload.downloadVideoOnline(splashScreenUrl,splashScreenDate);
+      });
+
+
+
+    });
+  }*/
 
   getToken() async {
     if (Platform.isIOS) {
